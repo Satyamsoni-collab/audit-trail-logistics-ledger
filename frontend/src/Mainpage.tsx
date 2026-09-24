@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Breadcrumb, Input, Card, Tag, Typography, Row, Col } from 'antd';
-import { DashboardOutlined, ShoppingCartOutlined, BarChartOutlined } from '@ant-design/icons';
+import { Layout, Menu, Breadcrumb, Input, Card, Tag, Typography, Row, Col, Table, Badge } from 'antd';
+import { DashboardOutlined, ShoppingCartOutlined, BarChartOutlined, HistoryOutlined } from '@ant-design/icons';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { Search } = Input;
@@ -14,6 +14,26 @@ const MainPage: React.FC = () => {
       setSearchedId(value);
     }
   };
+
+  const auditHistory = [
+    { key: '1', event: 'Order Created', location: 'Warehouse 01', timestamp: '2026-09-24 10:15 AM', status: 'Success' },
+    { key: '2', event: 'Dispatched', location: 'Mumbai Hub', timestamp: '2026-09-24 02:40 PM', status: 'In Transit' },
+    { key: '3', event: 'Customs Cleared', location: 'Delhi Gateway', timestamp: '2026-09-24 06:10 PM', status: 'Success' },
+  ];
+
+  const columns = [
+    { title: 'Event Name', dataIndex: 'event', key: 'event' },
+    { title: 'Location', dataIndex: 'location', key: 'location' },
+    { title: 'Timestamp', dataIndex: 'timestamp', key: 'timestamp' },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Badge status={status === 'Success' ? 'success' : 'processing'} text={status} />
+      ),
+    },
+  ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -38,10 +58,9 @@ const MainPage: React.FC = () => {
           </Breadcrumb>
 
           <div style={{ background: '#fff', padding: 24, minHeight: 400, borderRadius: 8 }}>
-            {/* Shipment Search Bar */}
             <Row gutter={[16, 24]}>
               <Col span={24}>
-                <Title level={4}>Search Shipment</Title>
+                <Title level={4}>Track Shipment</Title>
                 <Search
                   placeholder="Enter Shipment ID (e.g., SHP-10024)"
                   allowClear
@@ -52,9 +71,8 @@ const MainPage: React.FC = () => {
                 />
               </Col>
 
-              {/* Basic Shipment Area */}
               <Col span={24}>
-                <Card title={`Shipment Details: ${searchedId}`} bordered={true}>
+                <Card title={`Active Shipment: ${searchedId}`} bordered={true}>
                   <Row gutter={[16, 16]}>
                     <Col span={6}>
                       <Text type="secondary">Status:</Text><br />
@@ -73,6 +91,12 @@ const MainPage: React.FC = () => {
                       <Text strong>Just now</Text>
                     </Col>
                   </Row>
+                </Card>
+              </Col>
+
+              <Col span={24}>
+                <Card title={<><HistoryOutlined /> Recent Audit Activity</>} bordered={true}>
+                  <Table dataSource={auditHistory} columns={columns} pagination={false} size="small" />
                 </Card>
               </Col>
             </Row>
