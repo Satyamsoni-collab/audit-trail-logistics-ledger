@@ -96,3 +96,49 @@ body {
     flex-direction: column;
   }
 }
+.sensor-chart {
+  min-height: 250px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.sensor-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.sensor-chart-header h3 {
+  margin: 0;
+}
+
+.sensor-chart-header span {
+  color: #64748b;
+  font-size: 14px;
+}
+.sensor-chart {
+  min-height: 250px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.sensor-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.sensor-chart-header h3 {
+  margin: 0;
+}
+
+.sensor-chart-header span {
+  color: #64748b;
+  font-size: 14px;
+}

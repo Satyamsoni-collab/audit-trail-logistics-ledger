@@ -1,4 +1,5 @@
 import React from "react";
+import SensorChart from "./SensorChart";
 
 function VisualizationPanel() {
   return (
@@ -15,10 +16,7 @@ function VisualizationPanel() {
       </div>
 
       <div className="visualization-grid">
-        <div className="chart-placeholder">
-          <h3>Temperature History</h3>
-          <p>Sensor chart will be displayed here.</p>
-        </div>
+        <SensorChart />
 
         <div className="chart-placeholder">
           <h3>Event Timeline</h3>
