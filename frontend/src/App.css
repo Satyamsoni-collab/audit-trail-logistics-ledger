@@ -142,3 +142,80 @@ body {
   color: #64748b;
   font-size: 14px;
 }
+.shipment-timeline {
+  min-height: 250px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.timeline-header h3 {
+  margin: 0;
+}
+
+.timeline-header span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.timeline-list {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline-list::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  background: #cbd5e1;
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -24px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 2px solid white;
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.timeline-time {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.timeline-content h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.timeline-content p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+}
