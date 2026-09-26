@@ -1,5 +1,5 @@
 import React from "react";
-import VisualizationPanel from "./components/visualization/VisualizationPanel";
+import VisualizationPanel from "./components/visualization/Visualizationpanel";
 import "./App.css";
 
 function App() {
