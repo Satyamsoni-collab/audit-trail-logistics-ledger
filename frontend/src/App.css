@@ -288,3 +288,61 @@ body {
 .state-row strong {
   text-align: right;
 }
+.state-scrubber {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.scrubber-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.scrubber-header h3 {
+  margin: 0 0 5px;
+}
+
+.scrubber-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.scrubber-header span {
+  font-weight: 600;
+}
+
+.scrubber-slider {
+  width: 100%;
+  cursor: pointer;
+}
+
+.scrubber-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.scrubber-state {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.scrubber-state span {
+  color: #64748b;
+}
+
+.scrubber-state strong {
+  text-align: right;
+}

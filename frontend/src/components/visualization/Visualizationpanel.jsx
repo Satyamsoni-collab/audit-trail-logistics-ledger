@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import SensorChart from "./SensorChart";
 import ShipmentTimeline from "./ShipmentTimeline";
+import StateScrubber from "./StateScrubber";
 
 function VisualizationPanel() {
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   return (
     <section className="visualization-panel">
@@ -26,6 +28,11 @@ function VisualizationPanel() {
           onSelectEvent={setSelectedEvent}
         />
       </div>
+      
+      <StateScrubber
+  currentIndex={currentIndex}
+  onChange={setCurrentIndex}
+/>
 
       <div className="state-preview">
         <h3>Shipment State Preview</h3>
