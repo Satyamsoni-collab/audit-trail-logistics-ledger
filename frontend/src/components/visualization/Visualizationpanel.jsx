@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+import SensorChart from "./SensorChart";
+import ShipmentTimeline from "./ShipmentTimeline";
 
 function VisualizationPanel() {
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
   return (
     <section className="visualization-panel">
       <div className="visualization-header">
@@ -15,15 +19,37 @@ function VisualizationPanel() {
       </div>
 
       <div className="visualization-grid">
-        <div className="chart-placeholder">
-          <h3>Temperature History</h3>
-          <p>Sensor chart will be displayed here.</p>
-        </div>
+        <SensorChart />
 
-        <div className="chart-placeholder">
-          <h3>Event Timeline</h3>
-          <p>Shipment events will be displayed here.</p>
-        </div>
+        <ShipmentTimeline
+          selectedEvent={selectedEvent}
+          onSelectEvent={setSelectedEvent}
+        />
+      </div>
+
+      <div className="state-preview">
+        <h3>Shipment State Preview</h3>
+
+        {selectedEvent ? (
+          <>
+            <div className="state-row">
+              <span>Selected Event</span>
+              <strong>{selectedEvent.type}</strong>
+            </div>
+
+            <div className="state-row">
+              <span>Event Time</span>
+              <strong>{selectedEvent.time}</strong>
+            </div>
+
+            <div className="state-row">
+              <span>Reconstructed State</span>
+              <strong>{selectedEvent.state}</strong>
+            </div>
+          </>
+        ) : (
+          <p>Select an event from the timeline to view its state.</p>
+        )}
       </div>
     </section>
   );
