@@ -21,7 +21,7 @@ function VisualizationPanel() {
       </div>
 
       <div className="visualization-grid">
-        <SensorChart />
+        <SensorChart currentIndex={currentIndex} />
 
         <ShipmentTimeline
           selectedEvent={selectedEvent}

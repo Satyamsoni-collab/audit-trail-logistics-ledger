@@ -346,3 +346,26 @@ body {
 .scrubber-state strong {
   text-align: right;
 }
+.chart-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.sensor-reading {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 20px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+.sensor-reading span {
+  color: #64748b;
+}
+
+.sensor-reading strong {
+  text-align: right;
+}

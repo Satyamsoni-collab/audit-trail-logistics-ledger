@@ -6,7 +6,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceDot
 } from "recharts";
 
 const sensorData = [
@@ -18,19 +19,41 @@ const sensorData = [
   { time: "18:00", temperature: 28 }
 ];
 
-function SensorChart() {
+const scrubberTimes = [
+  "08:00",
+  "10:30",
+  "14:00",
+  "18:00"
+];
+
+function SensorChart({ currentIndex = 0 }) {
+  const selectedTime = scrubberTimes[currentIndex];
+
+  const selectedPoint = sensorData.find(
+    (item) => item.time === selectedTime
+  );
+
   return (
     <div className="sensor-chart">
       <div className="sensor-chart-header">
-        <h3>Temperature History</h3>
+        <div>
+          <h3>Temperature History</h3>
+          <p className="chart-subtitle">
+            Sensor reading at selected shipment state
+          </p>
+        </div>
+
         <span>°C</span>
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={sensorData}>
           <CartesianGrid strokeDasharray="3 3" />
+
           <XAxis dataKey="time" />
+
           <YAxis />
+
           <Tooltip />
 
           <Line
@@ -39,9 +62,31 @@ function SensorChart() {
             stroke="#2563eb"
             strokeWidth={3}
             dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
           />
+
+          {selectedPoint && (
+            <ReferenceDot
+              x={selectedPoint.time}
+              y={selectedPoint.temperature}
+              r={7}
+              fill="#dc2626"
+              stroke="#ffffff"
+              strokeWidth={2}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
+
+      <div className="sensor-reading">
+        <span>Selected Time</span>
+        <strong>{selectedPoint?.time || "--"}</strong>
+
+        <span>Temperature</span>
+        <strong>
+          {selectedPoint ? `${selectedPoint.temperature} °C` : "--"}
+        </strong>
+      </div>
     </div>
   );
 }
