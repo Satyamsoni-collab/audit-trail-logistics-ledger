@@ -369,3 +369,80 @@ body {
 .sensor-reading strong {
   text-align: right;
 }
+/* Responsive visualization layout */
+
+@media (max-width: 900px) {
+  .visualization-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .visualization-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .sensor-chart,
+  .shipment-timeline {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-header {
+    padding: 18px;
+  }
+
+  .app-header h1 {
+    font-size: 22px;
+  }
+
+  .app-content {
+    padding: 15px;
+  }
+
+  .visualization-panel {
+    padding: 15px;
+  }
+
+  .visualization-header h2 {
+    font-size: 20px;
+  }
+
+  .sensor-chart,
+  .shipment-timeline,
+  .state-scrubber,
+  .state-preview {
+    padding: 15px;
+  }
+
+  .timeline-header,
+  .scrubber-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .scrubber-labels {
+    font-size: 10px;
+  }
+
+  .state-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .state-row strong {
+    text-align: left;
+  }
+
+  .scrubber-state {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .scrubber-state strong {
+    text-align: left;
+    margin-bottom: 8px;
+  }
+}
