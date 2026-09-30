@@ -1,4 +1,5 @@
 import Event from '../models/events/EventStore.js';
+import EventBus from '../events/EventBus.js';
 
 /**
  * Service to interact with the Event Store.
@@ -14,7 +15,7 @@ class EventStoreService {
    * @param {String} eventData.aggregateType
    * @param {String} eventData.eventType
    * @param {Object} eventData.payload
-   * @param {Number} eventData.expectedVersion - The version the aggregate is currently at.
+   * @param {Number} eventData.expectedVersion
    * @param {String} [eventData.actor]
    * @returns {Promise<Object>} The saved event
    */
@@ -41,13 +42,11 @@ class EventStoreService {
       const savedEvent = await event.save();
       console.log(`[EventStore] Appended ${eventType} to ${aggregateType} ${aggregateId} at version ${newVersion}`);
       
-      // TODO: Publish event to a Message Broker (like RabbitMQ/Kafka) or a local Event Bus
-      // so the Projections/Read Models can be updated asynchronously.
+      // Publish event to the local Event Bus so Projectors can update Read Models
+      EventBus.publish(eventType, savedEvent);
 
       return savedEvent;
     } catch (error) {
-      // If we get a duplicate key error on the unique index (aggregateId, version),
-      // it means a concurrency collision occurred.
       if (error.code === 11000) {
         throw new Error(`ConcurrencyException: Aggregate ${aggregateId} has been modified by another process.`);
       }

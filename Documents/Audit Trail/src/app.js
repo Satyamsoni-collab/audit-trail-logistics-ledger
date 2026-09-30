@@ -6,6 +6,9 @@ import helmet from 'helmet';
 import commandRoutes from './api/routes/command.routes.js';
 import queryRoutes from './api/routes/query.routes.js';
 
+// Initialize Projectors
+import './events/projectors/InventoryProjector.js';
+
 const app = express();
 
 // --- Middleware ---
