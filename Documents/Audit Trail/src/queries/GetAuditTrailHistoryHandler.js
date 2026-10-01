@@ -1,4 +1,4 @@
-import EventStoreService from '../../services/EventStoreService.js';
+import EventStoreService from '../services/EventStoreService.js';
 
 class GetAuditTrailHistoryHandler {
   static async handle(queryData) {

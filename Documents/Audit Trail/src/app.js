@@ -5,6 +5,7 @@ import helmet from 'helmet';
 // Import CQRS Routes
 import commandRoutes from './api/routes/command.routes.js';
 import queryRoutes from './api/routes/query.routes.js';
+import auditRoutes from './api/routes/audit.routes.js';
 
 // Initialize Projectors
 import './events/projectors/InventoryProjector.js';
@@ -45,6 +46,7 @@ app.use('/api/commands', commandRoutes);
 // All read operations (Queries) are routed here
 // These endpoints will query the read models/projections.
 app.use('/api/queries', queryRoutes);
+app.use('/api/v1', auditRoutes);
 // ----------------------------------------------------
 
 

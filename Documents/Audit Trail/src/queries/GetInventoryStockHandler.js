@@ -1,4 +1,4 @@
-import InventoryItemReadModel from '../../models/readModels/InventoryItem.js';
+import InventoryItemReadModel from '../models/readModels/InventoryItem.js';
 
 class GetInventoryStockHandler {
   static async handle(queryData) {
