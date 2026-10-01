@@ -32,6 +32,15 @@ function SensorChart({ currentIndex = 0 }) {
   const selectedPoint = sensorData.find(
     (item) => item.time === selectedTime
   );
+  const currentTemperature = selectedPoint?.temperature ?? 0;
+
+let sensorStatus = "Normal";
+
+if (currentTemperature >= 33) {
+  sensorStatus = "High Temperature";
+} else if (currentTemperature >= 30) {
+  sensorStatus = "Warning";
+}
 
   return (
     <div className="sensor-chart">
@@ -44,6 +53,9 @@ function SensorChart({ currentIndex = 0 }) {
         </div>
 
         <span>°C</span>
+        <span className="sensor-status">
+  {sensorStatus}
+</span>
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
