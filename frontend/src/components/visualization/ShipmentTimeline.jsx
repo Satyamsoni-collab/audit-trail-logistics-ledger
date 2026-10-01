@@ -32,6 +32,13 @@ const shipmentEvents = [
 ];
 
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
+  const [filter, setFilter] = React.useState("ALL");
+
+  const filteredEvents =
+    filter === "ALL"
+      ? shipmentEvents
+      : shipmentEvents.filter((event) => event.type === filter);
+
   return (
     <div className="shipment-timeline">
       <div className="timeline-header">
@@ -39,8 +46,45 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <span>Shipment History</span>
       </div>
 
+      <div className="timeline-filters">
+        <button
+          className={filter === "ALL" ? "active" : ""}
+          onClick={() => setFilter("ALL")}
+        >
+          All
+        </button>
+
+        <button
+          className={filter === "CONTAINER_CREATED" ? "active" : ""}
+          onClick={() => setFilter("CONTAINER_CREATED")}
+        >
+          Created
+        </button>
+
+        <button
+          className={filter === "LOADED_ON_SHIP" ? "active" : ""}
+          onClick={() => setFilter("LOADED_ON_SHIP")}
+        >
+          Loaded
+        </button>
+
+        <button
+          className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
+          onClick={() => setFilter("TEMPERATURE_SPIKE")}
+        >
+          Temperature
+        </button>
+
+        <button
+          className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
+          onClick={() => setFilter("ARRIVED_AT_PORT")}
+        >
+          Arrival
+        </button>
+      </div>
+
       <div className="timeline-list">
-        {shipmentEvents.map((event) => (
+        {filteredEvents.map((event) => (
           <button
             className={`timeline-item ${
               selectedEvent?.id === event.id ? "selected" : ""
