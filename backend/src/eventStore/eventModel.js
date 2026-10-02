@@ -23,6 +23,30 @@ const eventSchema = new mongoose.Schema({
   }
 });
 
+const blockUpdate = function () {
+  throw new Error("Events are immutable: updates are not allowed");
+};
+
+const blockDelete = function () {
+  throw new Error("Events are immutable: deletion is not allowed");
+};
+
+eventSchema.pre("updateOne", blockUpdate);
+eventSchema.pre("updateMany", blockUpdate);
+eventSchema.pre("findOneAndUpdate", blockUpdate);
+eventSchema.pre("replaceOne", blockUpdate);
+eventSchema.pre("findOneAndReplace", blockUpdate);
+
+eventSchema.pre("deleteOne", blockDelete);
+eventSchema.pre("deleteMany", blockDelete);
+eventSchema.pre("findOneAndDelete", blockDelete);
+
+eventSchema.pre("save", function () {
+  if (!this.isNew) {
+    throw new Error("Events are immutable: updates are not allowed");
+  }
+});
+
 const Event = mongoose.model("Event", eventSchema);
 
 module.exports = Event;
