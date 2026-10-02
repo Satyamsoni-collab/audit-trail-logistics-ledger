@@ -26,12 +26,6 @@ export const updateStock = async (req, res, next) => {
     
     res.status(202).json(result);
   } catch (error) {
-    if (error.message.startsWith('ValidationException')) {
-      return res.status(400).json({ error: error.message });
-    }
-    if (error.message.startsWith('ConcurrencyException')) {
-      return res.status(409).json({ error: error.message });
-    }
     next(error);
   }
 };

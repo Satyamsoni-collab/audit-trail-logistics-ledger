@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import commandRoutes from './api/routes/command.routes.js';
 import queryRoutes from './api/routes/query.routes.js';
 import auditRoutes from './api/routes/audit.routes.js';
+import { errorHandler, notFoundHandler } from './api/middlewares/errorHandler.middleware.js';
 
 // Initialize Projectors
 import './events/projectors/InventoryProjector.js';
@@ -53,17 +54,9 @@ app.use('/api/v1', auditRoutes);
 // --- Error Handling ---
 
 // 404 Handler for undefined routes
-app.use((req, res, next) => {
-  res.status(404).json({ error: 'Endpoint not found' });
-});
+app.use(notFoundHandler);
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+// Global Error Handler (Must be the last middleware)
+app.use(errorHandler);
 
 export default app;
