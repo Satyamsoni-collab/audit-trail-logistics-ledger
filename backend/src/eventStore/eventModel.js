@@ -47,6 +47,16 @@ eventSchema.pre("save", function () {
   }
 });
 
+eventSchema.pre("bulkWrite", function (operations) {
+  for (const operation of operations) {
+    if (!operation.insertOne) {
+      throw new Error(
+        "Events are immutable: bulk updates and deletions are not allowed"
+      );
+    }
+  }
+});
+
 const Event = mongoose.model("Event", eventSchema);
 
 module.exports = Event;
