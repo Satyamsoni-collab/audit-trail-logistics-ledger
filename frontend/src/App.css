@@ -453,3 +453,71 @@ body {
   font-weight: 600;
   background: #e2e8f0;
 }
+.timeline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.timeline-filters button {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.timeline-filters button:hover {
+  background: #f1f5f9;
+}
+
+.timeline-filters button.active {
+  font-weight: 600;
+}
+.shipment-search {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 10px;
+}
+
+.shipment-search input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 14px;
+  outline: none;
+}
+
+.shipment-search input:focus {
+  border-color: #2563eb;
+}
+
+.shipment-search button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.shipment-search button:hover {
+  opacity: 0.9;
+}
+
+.searched-shipment {
+  margin-bottom: 15px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+}
+
+.searched-shipment strong {
+  margin-left: 6px;
+}
