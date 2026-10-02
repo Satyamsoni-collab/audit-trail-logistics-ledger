@@ -6,6 +6,14 @@ import StateScrubber from "./StateScrubber";
 function VisualizationPanel() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [shipmentId, setShipmentId] = useState("");
+  const [searchedShipment, setSearchedShipment] = useState("");
+
+  const handleSearch = () => {
+    setSearchedShipment(shipmentId.trim());
+    setSelectedEvent(null);
+    setCurrentIndex(0);
+  };
 
   return (
     <section className="visualization-panel">
@@ -20,6 +28,31 @@ function VisualizationPanel() {
         </span>
       </div>
 
+      <div className="shipment-search">
+        <input
+          type="text"
+          placeholder="Enter Shipment ID"
+          value={shipmentId}
+          onChange={(event) => setShipmentId(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleSearch();
+            }
+          }}
+        />
+
+        <button onClick={handleSearch}>
+          Search
+        </button>
+      </div>
+
+      {searchedShipment && (
+        <div className="searched-shipment">
+          Showing shipment:
+          <strong>{searchedShipment}</strong>
+        </div>
+      )}
+
       <div className="visualization-grid">
         <SensorChart currentIndex={currentIndex} />
 
@@ -28,11 +61,11 @@ function VisualizationPanel() {
           onSelectEvent={setSelectedEvent}
         />
       </div>
-      
+
       <StateScrubber
-  currentIndex={currentIndex}
-  onChange={setCurrentIndex}
-/>
+        currentIndex={currentIndex}
+        onChange={setCurrentIndex}
+      />
 
       <div className="state-preview">
         <h3>Shipment State Preview</h3>
