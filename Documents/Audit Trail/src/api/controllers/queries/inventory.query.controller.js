@@ -15,9 +15,6 @@ export const getInventoryStock = async (req, res, next) => {
       data: result
     });
   } catch (error) {
-    if (error.message.startsWith('ValidationException')) {
-      return res.status(400).json({ error: error.message });
-    }
     next(error);
   }
 };
