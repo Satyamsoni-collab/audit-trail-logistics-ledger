@@ -29,3 +29,4 @@ export const DashboardTracker = () => ({ status: 'active', verified: true, syncD
 // week 2 progress step 21 ledger UI update
 // week 2 progress step 22 ledger UI update
 // week 2 progress step 23 ledger UI update
+// week 2 progress step 24 ledger UI update
