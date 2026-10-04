@@ -12,7 +12,7 @@ import {
 
 const sensorData = [
   { time: "08:00", temperature: 24 },
-  { time: "10:00", temperature: 26 },
+  { time: "10:30", temperature: 26 },
   { time: "12:00", temperature: 29 },
   { time: "14:00", temperature: 34 },
   { time: "16:00", temperature: 31 },
@@ -32,15 +32,16 @@ function SensorChart({ currentIndex = 0 }) {
   const selectedPoint = sensorData.find(
     (item) => item.time === selectedTime
   );
+
   const currentTemperature = selectedPoint?.temperature ?? 0;
 
-let sensorStatus = "Normal";
+  let sensorStatus = "Normal";
 
-if (currentTemperature >= 33) {
-  sensorStatus = "High Temperature";
-} else if (currentTemperature >= 30) {
-  sensorStatus = "Warning";
-}
+  if (currentTemperature >= 33) {
+    sensorStatus = "High Temperature";
+  } else if (currentTemperature >= 30) {
+    sensorStatus = "Warning";
+  }
 
   return (
     <div className="sensor-chart">
@@ -53,9 +54,10 @@ if (currentTemperature >= 33) {
         </div>
 
         <span>°C</span>
+
         <span className="sensor-status">
-  {sensorStatus}
-</span>
+          {sensorStatus}
+        </span>
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
@@ -90,13 +92,37 @@ if (currentTemperature >= 33) {
         </LineChart>
       </ResponsiveContainer>
 
+      {/* Temperature Status Legend */}
+      <div className="temperature-legend">
+        <span className="legend-title">
+          Temperature Status
+        </span>
+
+        <span className="legend-item">
+          <span className="legend-dot normal"></span>
+          Normal (&lt; 30°C)
+        </span>
+
+        <span className="legend-item">
+          <span className="legend-dot warning"></span>
+          Warning (30–32°C)
+        </span>
+
+        <span className="legend-item">
+          <span className="legend-dot high"></span>
+          High (≥ 33°C)
+        </span>
+      </div>
+
       <div className="sensor-reading">
         <span>Selected Time</span>
         <strong>{selectedPoint?.time || "--"}</strong>
 
         <span>Temperature</span>
         <strong>
-          {selectedPoint ? `${selectedPoint.temperature} °C` : "--"}
+          {selectedPoint
+            ? `${selectedPoint.temperature} °C`
+            : "--"}
         </strong>
       </div>
     </div>
