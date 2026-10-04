@@ -1,7 +1,15 @@
+
 import React, { useState } from "react";
 import SensorChart from "./SensorChart";
 import ShipmentTimeline from "./ShipmentTimeline";
 import StateScrubber from "./StateScrubber";
+
+const shipmentStates = [
+  { type: "CONTAINER_CREATED", time: "08:00" },
+  { type: "LOADED_ON_SHIP", time: "10:30" },
+  { type: "TEMPERATURE_SPIKE", time: "14:00" },
+  { type: "ARRIVED_AT_PORT", time: "18:00" }
+];
 
 function VisualizationPanel() {
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -9,7 +17,26 @@ function VisualizationPanel() {
   const [shipmentId, setShipmentId] = useState("");
   const [searchedShipment, setSearchedShipment] = useState("");
 
+  const handleEventSelect = (event) => {
+    setSelectedEvent(event);
+
+    const index = shipmentStates.findIndex(
+      (item) => item.type === event.type
+    );
+
+    if (index !== -1) {
+      setCurrentIndex(index);
+    }
+  };
+
+  const handleScrubberChange = (index) => {
+    setCurrentIndex(index);
+    setSelectedEvent(null);
+  };
+
   const handleSearch = () => {
+    if (!shipmentId.trim()) return;
+
     setSearchedShipment(shipmentId.trim());
     setSelectedEvent(null);
     setCurrentIndex(0);
@@ -20,9 +47,8 @@ function VisualizationPanel() {
       <div className="visualization-header">
         <div>
           <h2>Shipment Visualization</h2>
-          <p>Monitor historical shipment and sensor information</p>
+          <p>Monitor shipment events and sensor history</p>
         </div>
-
         <span className="visualization-status">
           Visualization Ready
         </span>
@@ -33,23 +59,17 @@ function VisualizationPanel() {
           type="text"
           placeholder="Enter Shipment ID"
           value={shipmentId}
-          onChange={(event) => setShipmentId(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              handleSearch();
-            }
+          onChange={(e) => setShipmentId(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSearch();
           }}
         />
-
-        <button onClick={handleSearch}>
-          Search
-        </button>
+        <button onClick={handleSearch}>Search</button>
       </div>
 
       {searchedShipment && (
         <div className="searched-shipment">
-          Showing shipment:
-          <strong>{searchedShipment}</strong>
+          Showing shipment: <strong>{searchedShipment}</strong>
         </div>
       )}
 
@@ -58,13 +78,13 @@ function VisualizationPanel() {
 
         <ShipmentTimeline
           selectedEvent={selectedEvent}
-          onSelectEvent={setSelectedEvent}
+          onSelectEvent={handleEventSelect}
         />
       </div>
 
       <StateScrubber
         currentIndex={currentIndex}
-        onChange={setCurrentIndex}
+        onChange={handleScrubberChange}
       />
 
       <div className="state-preview">
@@ -88,7 +108,9 @@ function VisualizationPanel() {
             </div>
           </>
         ) : (
-          <p>Select an event from the timeline to view its state.</p>
+          <p>
+            Select an event to view its reconstructed state.
+          </p>
         )}
       </div>
     </section>
