@@ -3,11 +3,15 @@ const mongoose = require("mongoose");
 const eventSchema = new mongoose.Schema({
   aggregateId: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    minlength: 1
   },
   eventType: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    minlength: 1
   },
   payload: {
     type: mongoose.Schema.Types.Mixed,
@@ -19,7 +23,12 @@ const eventSchema = new mongoose.Schema({
   },
   version: {
     type: Number,
-    required: true
+    required: true,
+    min: 1,
+    validate: {
+      validator: Number.isInteger,
+      message: "Event version must be an integer"
+    }
   }
 });
 
