@@ -538,3 +538,44 @@ body {
 .reset-button:hover {
   background: #f1f5f9;
 }
+.temperature-legend {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  padding: 10px 12px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.legend-title {
+  font-weight: 600;
+  color: #334155;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot.normal {
+  background: #22c55e;
+}
+
+.legend-dot.warning {
+  background: #f59e0b;
+}
+
+.legend-dot.high {
+  background: #ef4444;
+}
