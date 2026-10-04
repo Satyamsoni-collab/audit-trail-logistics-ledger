@@ -12,7 +12,7 @@ import {
 
 const sensorData = [
   { time: "08:00", temperature: 24 },
-  { time: "10:00", temperature: 26 },
+  { time: "10:30", temperature: 26 },
   { time: "12:00", temperature: 29 },
   { time: "14:00", temperature: 34 },
   { time: "16:00", temperature: 31 },
