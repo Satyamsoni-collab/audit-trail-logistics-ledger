@@ -36,3 +36,16 @@ export const DashboardTracker = () => ({ status: 'active', verified: true, syncD
 // week 2 progress step 28 ledger UI update
 // week 2 progress step 29 ledger UI update
 // week 2 progress step 30 ledger UI update
+
+// Week 2: Logistics Ledger Table Component
+export const LedgerTable = () => {
+  return (
+    <div className='ledger-container'>
+      <h3>Audit Trail Ledger</h3>
+      <table>
+        <thead><tr><th>ID</th><th>Status</th><th>Timestamp</th></tr></thead>
+        <tbody><tr><td>#TRK-101</td><td>In-Transit</td><td>{new Date().toLocaleDateString()}</td></tr></tbody>
+      </table>
+    </div>
+  );
+};
