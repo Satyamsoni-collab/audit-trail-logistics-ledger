@@ -41,6 +41,12 @@ function VisualizationPanel() {
     setSelectedEvent(null);
     setCurrentIndex(0);
   };
+  const handleReset = () => {
+  setSelectedEvent(null);
+  setCurrentIndex(0);
+  setShipmentId("");
+  setSearchedShipment("");
+};
 
   return (
     <section className="visualization-panel">
@@ -66,6 +72,11 @@ function VisualizationPanel() {
         />
         <button onClick={handleSearch}>Search</button>
       </div>
+      <div className="visualization-actions">
+  <button onClick={handleReset} className="reset-button">
+    Reset Visualization
+  </button>
+</div>
 
       {searchedShipment && (
         <div className="searched-shipment">
