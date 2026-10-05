@@ -38,6 +38,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     filter === "ALL"
       ? shipmentEvents
       : shipmentEvents.filter((event) => event.type === filter);
+  const eventCount = filteredEvents.length;
 
   return (
     <div className="shipment-timeline">
@@ -45,6 +46,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <h3>Event Timeline</h3>
         <span>Shipment History</span>
       </div>
+      <div className="timeline-summary">
+  <span>Events</span>
+  <strong>{eventCount}</strong>
+</div>
 
       <div className="timeline-filters">
         <button

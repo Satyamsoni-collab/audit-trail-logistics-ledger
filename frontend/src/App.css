@@ -579,3 +579,18 @@ body {
 .legend-dot.high {
   background: #ef4444;
 }
+.timeline-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
+}
+
+.timeline-summary strong {
+  color: #1e293b;
+  font-size: 15px;
+}
