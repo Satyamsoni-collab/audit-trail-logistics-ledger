@@ -1,6 +1,10 @@
 const assert = require("node:assert/strict");
 const Event = require("../src/eventStore/eventModel");
 
+// -----------------------------------
+// IMMUTABILITY TESTS
+// -----------------------------------
+
 const tests = {
   updateOne: () => Event.updateOne({}, { eventType: "Modified" }),
 
@@ -66,14 +70,113 @@ async function runTests() {
     console.error(`FAIL: existing document save - ${error.message}`);
   }
 
-  console.log(`\n${passed}/10 tests passed`);
+  console.log(`\n${passed}/10 immutability tests passed`);
 
   if (passed !== 10) {
     process.exitCode = 1;
   }
 }
 
-runTests().catch((error) => {
+// -----------------------------------
+// INPUT VALIDATION TESTS
+// -----------------------------------
+
+async function runValidationTests() {
+  const validationCases = [
+    {
+      name: "empty aggregateId",
+      data: {
+        aggregateId: "   ",
+        eventType: "Created",
+        payload: {},
+        version: 1,
+      },
+    },
+    {
+      name: "empty eventType",
+      data: {
+        aggregateId: "test-001",
+        eventType: "   ",
+        payload: {},
+        version: 1,
+      },
+    },
+    {
+      name: "zero version",
+      data: {
+        aggregateId: "test-001",
+        eventType: "Created",
+        payload: {},
+        version: 0,
+      },
+    },
+    {
+      name: "negative version",
+      data: {
+        aggregateId: "test-001",
+        eventType: "Created",
+        payload: {},
+        version: -1,
+      },
+    },
+    {
+      name: "decimal version",
+      data: {
+        aggregateId: "test-001",
+        eventType: "Created",
+        payload: {},
+        version: 1.5,
+      },
+    },
+  ];
+
+  let passed = 0;
+
+  for (const test of validationCases) {
+    const event = new Event(test.data);
+
+    try {
+      await assert.rejects(event.validate());
+      console.log(`PASS: ${test.name} rejected`);
+      passed++;
+    } catch (error) {
+      console.error(`FAIL: ${test.name} - ${error.message}`);
+    }
+  }
+
+  const validEvent = new Event({
+    aggregateId: "test-001",
+    eventType: "Created",
+    payload: {},
+    version: 1,
+  });
+
+  try {
+    await validEvent.validate();
+    console.log("PASS: valid event accepted");
+    passed++;
+  } catch (error) {
+    console.error(`FAIL: valid event - ${error.message}`);
+  }
+
+  console.log(`\n${passed}/6 validation tests passed`);
+
+  if (passed !== 6) {
+    process.exitCode = 1;
+  }
+}
+
+// -----------------------------------
+// RUN ALL TESTS
+// -----------------------------------
+
+async function runAllTests() {
+  await runTests();
+  console.log("");
+  await runValidationTests();
+}
+
+runAllTests().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
