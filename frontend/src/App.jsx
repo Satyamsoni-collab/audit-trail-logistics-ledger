@@ -49,3 +49,9 @@ export const LedgerTable = () => {
     </div>
   );
 };
+
+// Week 2: Shipment Status Badge Component
+export const StatusBadge = ({ status }) => {
+  const colors = { Pending: '#eab308', InTransit: '#3b82f6', Delivered: '#22c55e' };
+  return <span style={{ padding: '4px 8px', borderRadius: '4px', color: '#fff', backgroundColor: colors[status] || '#6b7280' }}>{status}</span>;
+};
