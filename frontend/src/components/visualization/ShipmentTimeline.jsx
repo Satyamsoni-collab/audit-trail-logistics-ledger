@@ -31,6 +31,18 @@ const shipmentEvents = [
   }
 ];
 
+const getEventSeverity = (eventType) => {
+  if (eventType === "TEMPERATURE_SPIKE") {
+    return "High";
+  }
+
+  if (eventType === "LOADED_ON_SHIP") {
+    return "Medium";
+  }
+
+  return "Normal";
+};
+
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
 
@@ -38,18 +50,23 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     filter === "ALL"
       ? shipmentEvents
       : shipmentEvents.filter((event) => event.type === filter);
+
   const eventCount = filteredEvents.length;
 
   return (
     <div className="shipment-timeline">
+
       <div className="timeline-header">
-        <h3>Event Timeline</h3>
-        <span>Shipment History</span>
+        <div>
+          <h3>Event Timeline</h3>
+          <span>Shipment History</span>
+        </div>
+
+        <div className="timeline-summary">
+          <span>Events</span>
+          <strong>{eventCount}</strong>
+        </div>
       </div>
-      <div className="timeline-summary">
-  <span>Events</span>
-  <strong>{eventCount}</strong>
-</div>
 
       <div className="timeline-filters">
         <button
@@ -100,13 +117,28 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
             <div className="timeline-marker"></div>
 
             <div className="timeline-content">
-              <div className="timeline-time">{event.time}</div>
-              <h4>{event.type}</h4>
+              <div className="timeline-time">
+                {event.time}
+              </div>
+
+              <div className="event-title">
+                <h4>{event.type}</h4>
+
+                <span
+                  className={`event-severity ${getEventSeverity(
+                    event.type
+                  ).toLowerCase()}`}
+                >
+                  {getEventSeverity(event.type)}
+                </span>
+              </div>
+
               <p>{event.description}</p>
             </div>
           </button>
         ))}
       </div>
+
     </div>
   );
 }
