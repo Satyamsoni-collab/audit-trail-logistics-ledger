@@ -107,6 +107,16 @@ function VisualizationPanel() {
               <span>Selected Event</span>
               <strong>{selectedEvent.type}</strong>
             </div>
+            <div className="state-row">
+  <span>Severity</span>
+  <strong>
+    {selectedEvent.type === "TEMPERATURE_SPIKE"
+      ? "High"
+      : selectedEvent.type === "LOADED_ON_SHIP"
+      ? "Medium"
+      : "Normal"}
+  </strong>
+</div>
 
             <div className="state-row">
               <span>Event Time</span>
