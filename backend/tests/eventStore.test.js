@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const Event = require("../src/eventStore/eventModel");
+const EventStore = require("../src/eventStore/eventStore");
 
 // -----------------------------------
 // IMMUTABILITY TESTS
@@ -167,13 +168,80 @@ async function runValidationTests() {
 }
 
 // -----------------------------------
+// EVENT RETRIEVAL TEST
+// -----------------------------------
+
+async function runRetrievalTest() {
+  let receivedFilter;
+  let receivedSort;
+
+  const mockEventModel = {
+    find(filter) {
+      receivedFilter = filter;
+
+      return {
+        async sort(sortOrder) {
+          receivedSort = sortOrder;
+
+          return [
+            {
+              aggregateId: "shipment-001",
+              eventType: "ShipmentCreated",
+              version: 1,
+            },
+            {
+              aggregateId: "shipment-001",
+              eventType: "ShipmentUpdated",
+              version: 2,
+            },
+          ];
+        },
+      };
+    },
+  };
+
+  const eventStore = new EventStore(mockEventModel);
+
+  try {
+    const events = await eventStore.getEventsByAggregateId(
+      "shipment-001"
+    );
+
+    assert.deepEqual(receivedFilter, {
+      aggregateId: "shipment-001",
+    });
+
+    assert.deepEqual(receivedSort, {
+      version: 1,
+    });
+
+    assert.equal(events.length, 2);
+    assert.equal(events[0].version, 1);
+    assert.equal(events[1].version, 2);
+
+    console.log(
+      "PASS: events retrieved by aggregateId in version order"
+    );
+  } catch (error) {
+    console.error(`FAIL: event retrieval - ${error.message}`);
+    process.exitCode = 1;
+  }
+}
+
+// -----------------------------------
 // RUN ALL TESTS
 // -----------------------------------
 
 async function runAllTests() {
   await runTests();
+
   console.log("");
+
   await runValidationTests();
+
+  console.log("");
+
+  await runRetrievalTest();
 }
 
 runAllTests().catch((error) => {
