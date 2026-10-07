@@ -645,3 +645,21 @@ body {
   background: #fee2e2;
   color: #991b1b;
 }
+.timeline-empty {
+  padding: 25px 15px;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+}
+
+.timeline-empty strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #334155;
+}
+
+.timeline-empty p {
+  margin: 0;
+  font-size: 13px;
+}
