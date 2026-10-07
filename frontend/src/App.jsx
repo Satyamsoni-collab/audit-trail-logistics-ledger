@@ -55,3 +55,6 @@ export const StatusBadge = ({ status }) => {
   const colors = { Pending: '#eab308', InTransit: '#3b82f6', Delivered: '#22c55e' };
   return <span style={{ padding: '4px 8px', borderRadius: '4px', color: '#fff', backgroundColor: colors[status] || '#6b7280' }}>{status}</span>;
 };
+
+// Week 2: Filter Controls for Audit Logs
+export const LogFilters = () => <div className='filters-row'><button>All</button><button>Active</button><button>Completed</button></div>;
