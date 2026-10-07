@@ -622,3 +622,44 @@ body {
   background: #fee2e2;
   color: #991b1b;
 }
+.preview-severity {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.preview-severity.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.preview-severity.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.preview-severity.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.timeline-empty {
+  padding: 25px 15px;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+}
+
+.timeline-empty strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #334155;
+}
+
+.timeline-empty p {
+  margin: 0;
+  font-size: 13px;
+}

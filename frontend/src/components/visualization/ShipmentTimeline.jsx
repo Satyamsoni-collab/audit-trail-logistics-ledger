@@ -106,38 +106,45 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       </div>
 
       <div className="timeline-list">
-        {filteredEvents.map((event) => (
-          <button
-            className={`timeline-item ${
-              selectedEvent?.id === event.id ? "selected" : ""
-            }`}
-            key={event.id}
-            onClick={() => onSelectEvent(event)}
-          >
-            <div className="timeline-marker"></div>
+  {filteredEvents.length > 0 ? (
+    filteredEvents.map((event) => (
+      <button
+        className={`timeline-item ${
+          selectedEvent?.id === event.id ? "selected" : ""
+        }`}
+        key={event.id}
+        onClick={() => onSelectEvent(event)}
+      >
+        <div className="timeline-marker"></div>
 
-            <div className="timeline-content">
-              <div className="timeline-time">
-                {event.time}
-              </div>
+        <div className="timeline-content">
+          <div className="timeline-time">
+            {event.time}
+          </div>
 
-              <div className="event-title">
-                <h4>{event.type}</h4>
+          <div className="event-title">
+            <h4>{event.type}</h4>
 
-                <span
-                  className={`event-severity ${getEventSeverity(
-                    event.type
-                  ).toLowerCase()}`}
-                >
-                  {getEventSeverity(event.type)}
-                </span>
-              </div>
+            <span
+              className={`event-severity ${getEventSeverity(
+                event.type
+              ).toLowerCase()}`}
+            >
+              {getEventSeverity(event.type)}
+            </span>
+          </div>
 
-              <p>{event.description}</p>
-            </div>
-          </button>
-        ))}
-      </div>
+          <p>{event.description}</p>
+        </div>
+      </button>
+    ))
+  ) : (
+    <div className="timeline-empty">
+      <strong>No events found</strong>
+      <p>No shipment events match the selected filter.</p>
+    </div>
+  )}
+</div>
 
     </div>
   );
