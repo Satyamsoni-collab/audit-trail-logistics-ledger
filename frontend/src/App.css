@@ -622,3 +622,26 @@ body {
   background: #fee2e2;
   color: #991b1b;
 }
+.preview-severity {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.preview-severity.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.preview-severity.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.preview-severity.high {
+  background: #fee2e2;
+  color: #991b1b;
+}

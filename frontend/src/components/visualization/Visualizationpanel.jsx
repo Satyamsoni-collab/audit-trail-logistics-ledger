@@ -109,7 +109,16 @@ function VisualizationPanel() {
             </div>
             <div className="state-row">
   <span>Severity</span>
-  <strong>
+
+  <strong
+    className={`preview-severity ${
+      selectedEvent.type === "TEMPERATURE_SPIKE"
+        ? "high"
+        : selectedEvent.type === "LOADED_ON_SHIP"
+        ? "medium"
+        : "normal"
+    }`}
+  >
     {selectedEvent.type === "TEMPERATURE_SPIKE"
       ? "High"
       : selectedEvent.type === "LOADED_ON_SHIP"
