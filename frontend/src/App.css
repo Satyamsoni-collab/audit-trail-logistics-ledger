@@ -669,3 +669,39 @@ body {
   font-size: 11px;
   color: #64748b;
 }
+.event-state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.event-state span {
+  color: #64748b;
+}
+
+.event-state strong {
+  color: #334155;
+  font-weight: 600;
+}
+.state-preview-empty {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.state-preview-empty strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #334155;
+}
+
+.state-preview-empty p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}

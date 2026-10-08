@@ -101,6 +101,14 @@ function VisualizationPanel() {
       <div className="state-preview">
         <h3>Shipment State Preview</h3>
 
+<div className="state-preview-empty">
+  <strong>No event selected</strong>
+  <p>
+    Select an event from the shipment timeline to inspect
+    its reconstructed state, severity, and event time.
+  </p>
+</div>
+
         {selectedEvent ? (
           <>
             <div className="state-row">
