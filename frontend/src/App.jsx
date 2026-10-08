@@ -58,3 +58,12 @@ export const StatusBadge = ({ status }) => {
 
 // Week 2: Filter Controls for Audit Logs
 export const LogFilters = () => <div className='filters-row'><button>All</button><button>Active</button><button>Completed</button></div>;
+
+// Week 2: Pagination Controls for Ledger Table
+export const TablePagination = ({ page = 1, total = 5 }) => (
+  <div className='pagination-wrapper' style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+    <button disabled={page === 1}>Previous</button>
+    <span>Page {page} of {total}</span>
+    <button disabled={page === total}>Next</button>
+  </div>
+);
