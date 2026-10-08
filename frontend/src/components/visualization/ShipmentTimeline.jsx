@@ -43,6 +43,36 @@ const getEventSeverity = (eventType) => {
   return "Normal";
 };
 
+const getEventDuration = (index) => {
+  if (index === 0) {
+    return "Start";
+  }
+
+  const previous = shipmentEvents[index - 1];
+  const current = shipmentEvents[index];
+
+  const toMinutes = (time) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const difference =
+    toMinutes(current.time) - toMinutes(previous.time);
+
+  const hours = Math.floor(difference / 60);
+  const minutes = difference % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+
+  return `${minutes}m`;
+};
+
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
 
@@ -106,45 +136,57 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       </div>
 
       <div className="timeline-list">
-  {filteredEvents.length > 0 ? (
-    filteredEvents.map((event) => (
-      <button
-        className={`timeline-item ${
-          selectedEvent?.id === event.id ? "selected" : ""
-        }`}
-        key={event.id}
-        onClick={() => onSelectEvent(event)}
-      >
-        <div className="timeline-marker"></div>
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => {
+            const eventIndex = shipmentEvents.findIndex(
+              (item) => item.id === event.id
+            );
 
-        <div className="timeline-content">
-          <div className="timeline-time">
-            {event.time}
+            return (
+              <button
+                className={`timeline-item ${
+                  selectedEvent?.id === event.id ? "selected" : ""
+                }`}
+                key={event.id}
+                onClick={() => onSelectEvent(event)}
+              >
+                <div className="timeline-marker"></div>
+
+                <div className="timeline-content">
+                  <div className="timeline-time">
+                    {event.time}
+                  </div>
+
+                  <div className="event-title">
+                    <h4>{event.type}</h4>
+
+                    <span
+                      className={`event-severity ${getEventSeverity(
+                        event.type
+                      ).toLowerCase()}`}
+                    >
+                      {getEventSeverity(event.type)}
+                    </span>
+                  </div>
+
+                  <p>{event.description}</p>
+
+                  <span className="event-duration">
+                    {getEventDuration(eventIndex)} since previous event
+                  </span>
+                </div>
+              </button>
+            );
+          })
+        ) : (
+          <div className="timeline-empty">
+            <strong>No events found</strong>
+            <p>
+              No shipment events match the selected filter.
+            </p>
           </div>
-
-          <div className="event-title">
-            <h4>{event.type}</h4>
-
-            <span
-              className={`event-severity ${getEventSeverity(
-                event.type
-              ).toLowerCase()}`}
-            >
-              {getEventSeverity(event.type)}
-            </span>
-          </div>
-
-          <p>{event.description}</p>
-        </div>
-      </button>
-    ))
-  ) : (
-    <div className="timeline-empty">
-      <strong>No events found</strong>
-      <p>No shipment events match the selected filter.</p>
-    </div>
-  )}
-</div>
+        )}
+      </div>
 
     </div>
   );
