@@ -229,6 +229,57 @@ async function runRetrievalTest() {
 }
 
 // -----------------------------------
+// LATEST EVENT RETRIEVAL TEST
+// -----------------------------------
+
+async function runLatestEventTest() {
+  let receivedFilter;
+  let receivedSort;
+
+  const mockEventModel = {
+    findOne(filter) {
+      receivedFilter = filter;
+
+      return {
+        async sort(sortOrder) {
+          receivedSort = sortOrder;
+
+          return {
+            aggregateId: "shipment-001",
+            eventType: "ShipmentDelivered",
+            version: 3,
+          };
+        },
+      };
+    },
+  };
+
+  const eventStore = new EventStore(mockEventModel);
+
+  try {
+    const event = await eventStore.getLatestEventByAggregateId(
+      "shipment-001"
+    );
+
+    assert.deepEqual(receivedFilter, {
+      aggregateId: "shipment-001",
+    });
+
+    assert.deepEqual(receivedSort, {
+      version: -1,
+    });
+
+    assert.equal(event.version, 3);
+    assert.equal(event.eventType, "ShipmentDelivered");
+
+    console.log("PASS: latest shipment event retrieved");
+  } catch (error) {
+    console.error(`FAIL: latest event retrieval - ${error.message}`);
+    process.exitCode = 1;
+  }
+}
+
+// -----------------------------------
 // RUN ALL TESTS
 // -----------------------------------
 
@@ -242,6 +293,8 @@ async function runAllTests() {
   console.log("");
 
   await runRetrievalTest();
+
+  await runLatestEventTest();
 }
 
 runAllTests().catch((error) => {

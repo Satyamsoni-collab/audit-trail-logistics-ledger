@@ -13,6 +13,12 @@ class EventStore {
       .find({ aggregateId })
       .sort({ version: 1 });
   }
+
+  async getLatestEventByAggregateId(aggregateId) {
+    return await this.eventModel
+      .findOne({ aggregateId })
+      .sort({ version: -1 });
+  }
 }
 
 module.exports = EventStore;
