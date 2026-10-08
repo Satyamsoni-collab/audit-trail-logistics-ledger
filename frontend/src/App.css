@@ -663,3 +663,9 @@ body {
   margin: 0;
   font-size: 13px;
 }
+.event-duration {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #64748b;
+}
