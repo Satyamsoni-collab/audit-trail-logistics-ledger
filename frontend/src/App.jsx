@@ -67,3 +67,11 @@ export const TablePagination = ({ page = 1, total = 5 }) => (
     <button disabled={page === total}>Next</button>
   </div>
 );
+
+// Week 2: Audit Log Metrics Summary Card
+export const LogMetricsCard = ({ total = 120, pending = 4 }) => (
+  <div className='metrics-card' style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '6px' }}>
+    <h4>Shipment Summary</h4>
+    <p>Total Processed: {total} | Pending Review: {pending}</p>
+  </div>
+);
