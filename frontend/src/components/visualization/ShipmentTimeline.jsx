@@ -1,3 +1,4 @@
+
 import React from "react";
 
 const shipmentEvents = [
@@ -75,6 +76,7 @@ const getEventDuration = (index) => {
 
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
+  const [copyMessage, setCopyMessage] = React.useState("");
 
   const filteredEvents =
     filter === "ALL"
@@ -83,9 +85,30 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
   const eventCount = filteredEvents.length;
 
+  const handleCopyEvent = async () => {
+    if (!selectedEvent) {
+      setCopyMessage("Select an event first.");
+      return;
+    }
+
+    const details = [
+      `Event: ${selectedEvent.type}`,
+      `Time: ${selectedEvent.time}`,
+      `Severity: ${getEventSeverity(selectedEvent.type)}`,
+      `Description: ${selectedEvent.description}`,
+      `Reconstructed State: ${selectedEvent.state}`
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(details);
+      setCopyMessage("Event details copied successfully.");
+    } catch {
+      setCopyMessage("Unable to copy. Check browser clipboard permissions.");
+    }
+  };
+
   return (
     <div className="shipment-timeline">
-
       <div className="timeline-header">
         <div>
           <h3>Event Timeline</h3>
@@ -98,8 +121,25 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </div>
       </div>
 
+      <div className="timeline-copy-action">
+        <button
+          type="button"
+          className="copy-event-button"
+          onClick={handleCopyEvent}
+        >
+          Copy Selected Event
+        </button>
+
+        {copyMessage && (
+          <span className="copy-event-message" role="status">
+            {copyMessage}
+          </span>
+        )}
+      </div>
+
       <div className="timeline-filters">
         <button
+          type="button"
           className={filter === "ALL" ? "active" : ""}
           onClick={() => setFilter("ALL")}
         >
@@ -107,6 +147,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </button>
 
         <button
+          type="button"
           className={filter === "CONTAINER_CREATED" ? "active" : ""}
           onClick={() => setFilter("CONTAINER_CREATED")}
         >
@@ -114,6 +155,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </button>
 
         <button
+          type="button"
           className={filter === "LOADED_ON_SHIP" ? "active" : ""}
           onClick={() => setFilter("LOADED_ON_SHIP")}
         >
@@ -121,6 +163,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </button>
 
         <button
+          type="button"
           className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
           onClick={() => setFilter("TEMPERATURE_SPIKE")}
         >
@@ -128,6 +171,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </button>
 
         <button
+          type="button"
           className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
           onClick={() => setFilter("ARRIVED_AT_PORT")}
         >
@@ -144,11 +188,15 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
             return (
               <button
+                type="button"
                 className={`timeline-item ${
                   selectedEvent?.id === event.id ? "selected" : ""
                 }`}
                 key={event.id}
-                onClick={() => onSelectEvent(event)}
+                onClick={() => {
+                  onSelectEvent(event);
+                  setCopyMessage("");
+                }}
               >
                 <div className="timeline-marker"></div>
 
@@ -171,6 +219,11 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
                   <p>{event.description}</p>
 
+                  <div className="event-state">
+                    <span>State</span>
+                    <strong>{event.state}</strong>
+                  </div>
+
                   <span className="event-duration">
                     {getEventDuration(eventIndex)} since previous event
                   </span>
@@ -181,13 +234,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         ) : (
           <div className="timeline-empty">
             <strong>No events found</strong>
-            <p>
-              No shipment events match the selected filter.
-            </p>
+            <p>No shipment events match the selected filter.</p>
           </div>
         )}
       </div>
-
     </div>
   );
 }

@@ -705,3 +705,31 @@ body {
   font-size: 13px;
   line-height: 1.5;
 }
+
+.timeline-copy-action {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.copy-event-button {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy-event-button:hover {
+  background: #f1f5f9;
+}
+
+.copy-event-message {
+  color: #475569;
+  font-size: 12px;
+}
