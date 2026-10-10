@@ -1,0 +1,2 @@
+2026-10-08 19:38:34 [info]: ::1 - - [08/Oct/2026:14:08:34 +0000] "GET /api/health HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+2026-10-08 19:38:34 [info]: ::1 - - [08/Oct/2026:14:08:34 +0000] "GET /favicon.ico HTTP/1.1" 404 116 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"

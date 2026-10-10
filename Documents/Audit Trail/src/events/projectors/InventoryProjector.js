@@ -18,17 +18,22 @@ class InventoryProjector {
 
   async onItemCreated(event) {
     try {
-      const newItem = new InventoryItemReadModel({
-        aggregateId: event.aggregateId,
-        sku: event.payload.sku,
-        name: event.payload.name,
-        location: event.payload.location,
-        quantity: event.payload.quantity,
-        lastProcessedVersion: event.version
-      });
+      // Day 13 Idempotent Upsert: Ensures replay doesn't crash on duplicate ITEM_CREATED events
+      await InventoryItemReadModel.findOneAndUpdate(
+        { aggregateId: event.aggregateId },
+        {
+          $setOnInsert: {
+            sku: event.payload.sku,
+            name: event.payload.name,
+            location: event.payload.location,
+            quantity: event.payload.quantity,
+            lastProcessedVersion: event.version
+          }
+        },
+        { upsert: true, new: true }
+      );
 
-      await newItem.save();
-      console.log(`[Projector] Created read model for item ${event.aggregateId}`);
+      console.log(`[Projector] Verified/Created read model for item ${event.aggregateId} at version ${event.version}`);
     } catch (error) {
       console.error(`[Projector Error] Failed to project ITEM_CREATED: ${error.message}`);
     }

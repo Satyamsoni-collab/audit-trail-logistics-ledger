@@ -57,4 +57,11 @@ const eventStoreSchema = new mongoose.Schema({
 // An aggregate cannot have two events with the same version number
 eventStoreSchema.index({ aggregateId: 1, version: 1 }, { unique: true });
 
+// Advanced Indexes for Day 13:
+// 1. Timestamp-based range queries (e.g., retrieving events that happened today)
+eventStoreSchema.index({ timestamp: -1 });
+
+// 2. High-frequency event stream retrieval by type and time (e.g., all STOCK_UPDATED events in last 24h)
+eventStoreSchema.index({ eventType: 1, timestamp: -1 });
+
 export default mongoose.model('Event', eventStoreSchema);

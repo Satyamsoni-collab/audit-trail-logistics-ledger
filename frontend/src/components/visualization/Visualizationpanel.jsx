@@ -101,12 +101,39 @@ function VisualizationPanel() {
       <div className="state-preview">
         <h3>Shipment State Preview</h3>
 
+<div className="state-preview-empty">
+  <strong>No event selected</strong>
+  <p>
+    Select an event from the shipment timeline to inspect
+    its reconstructed state, severity, and event time.
+  </p>
+</div>
+
         {selectedEvent ? (
           <>
             <div className="state-row">
               <span>Selected Event</span>
               <strong>{selectedEvent.type}</strong>
             </div>
+            <div className="state-row">
+  <span>Severity</span>
+
+  <strong
+    className={`preview-severity ${
+      selectedEvent.type === "TEMPERATURE_SPIKE"
+        ? "high"
+        : selectedEvent.type === "LOADED_ON_SHIP"
+        ? "medium"
+        : "normal"
+    }`}
+  >
+    {selectedEvent.type === "TEMPERATURE_SPIKE"
+      ? "High"
+      : selectedEvent.type === "LOADED_ON_SHIP"
+      ? "Medium"
+      : "Normal"}
+  </strong>
+</div>
 
             <div className="state-row">
               <span>Event Time</span>

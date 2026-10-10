@@ -579,3 +579,157 @@ body {
 .legend-dot.high {
   background: #ef4444;
 }
+.timeline-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
+}
+
+.timeline-summary strong {
+  color: #1e293b;
+  font-size: 15px;
+}
+.event-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.event-severity {
+  padding: 3px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.event-severity.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.event-severity.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.event-severity.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.preview-severity {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.preview-severity.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.preview-severity.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.preview-severity.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.timeline-empty {
+  padding: 25px 15px;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+}
+
+.timeline-empty strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #334155;
+}
+
+.timeline-empty p {
+  margin: 0;
+  font-size: 13px;
+}
+.event-duration {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #64748b;
+}
+.event-state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.event-state span {
+  color: #64748b;
+}
+
+.event-state strong {
+  color: #334155;
+  font-weight: 600;
+}
+.state-preview-empty {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.state-preview-empty strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #334155;
+}
+
+.state-preview-empty p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.timeline-copy-action {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.copy-event-button {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy-event-button:hover {
+  background: #f1f5f9;
+}
+
+.copy-event-message {
+  color: #475569;
+  font-size: 12px;
+}
