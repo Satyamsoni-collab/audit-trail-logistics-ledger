@@ -119,8 +119,8 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       "Reconstructed State",
     ];
 
-    // Export all shipment events, not only the currently filtered events.
-    const rows = shipmentEvents.map((event) => [
+    // Export only events matching the active timeline filter.
+    const rows = filteredEvents.map((event) => [
       event.type,
       event.time,
       event.description,
@@ -144,7 +144,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "shipment-timeline.csv";
+    link.download =
+      filter === "ALL"
+        ? "shipment-timeline.csv"
+        : `shipment-timeline-${filter.toLowerCase()}.csv`;
 
     document.body.appendChild(link);
     link.click();
@@ -154,7 +157,9 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       URL.revokeObjectURL(url);
     }, 1000);
 
-    setExportMessage("Shipment timeline CSV download started.");
+    setExportMessage(
+      `Exported ${filteredEvents.length} shipment event(s) successfully.`
+    );
   };
 
   return (
@@ -205,7 +210,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "ALL" ? "active" : ""}
-          onClick={() => setFilter("ALL")}
+          onClick={() => {
+            setFilter("ALL");
+            setExportMessage("");
+          }}
         >
           All
         </button>
@@ -213,7 +221,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "CONTAINER_CREATED" ? "active" : ""}
-          onClick={() => setFilter("CONTAINER_CREATED")}
+          onClick={() => {
+            setFilter("CONTAINER_CREATED");
+            setExportMessage("");
+          }}
         >
           Created
         </button>
@@ -221,7 +232,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "LOADED_ON_SHIP" ? "active" : ""}
-          onClick={() => setFilter("LOADED_ON_SHIP")}
+          onClick={() => {
+            setFilter("LOADED_ON_SHIP");
+            setExportMessage("");
+          }}
         >
           Loaded
         </button>
@@ -229,7 +243,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
-          onClick={() => setFilter("TEMPERATURE_SPIKE")}
+          onClick={() => {
+            setFilter("TEMPERATURE_SPIKE");
+            setExportMessage("");
+          }}
         >
           Temperature
         </button>
@@ -237,7 +254,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
-          onClick={() => setFilter("ARRIVED_AT_PORT")}
+          onClick={() => {
+            setFilter("ARRIVED_AT_PORT");
+            setExportMessage("");
+          }}
         >
           Arrival
         </button>
