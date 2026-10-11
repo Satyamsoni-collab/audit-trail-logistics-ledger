@@ -15,6 +15,7 @@ import logger from './utils/logger.js';
 
 // Initialize Projectors
 import './events/projectors/InventoryProjector.js';
+import './events/projectors/RealTimeAnalyticsProjector.js';
 
 const app = express();
 
