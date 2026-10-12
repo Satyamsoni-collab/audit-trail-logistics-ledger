@@ -85,6 +85,14 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       : shipmentEvents.filter((event) => event.type === filter);
 
   const eventCount = filteredEvents.length;
+  const severityCounts = filteredEvents.reduce(
+  (counts, event) => {
+    const severity = getEventSeverity(event.type);
+    counts[severity] += 1;
+    return counts;
+  },
+  { High: 0, Medium: 0, Normal: 0 }
+);
 
   const handleCopyEvent = async () => {
     if (!selectedEvent) {
@@ -175,6 +183,22 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           <strong>{eventCount}</strong>
         </div>
       </div>
+      <div className="severity-summary">
+  <div className="severity-summary-card high">
+    <span>High</span>
+    <strong>{severityCounts.High}</strong>
+  </div>
+
+  <div className="severity-summary-card medium">
+    <span>Medium</span>
+    <strong>{severityCounts.Medium}</strong>
+  </div>
+
+  <div className="severity-summary-card normal">
+    <span>Normal</span>
+    <strong>{severityCounts.Normal}</strong>
+  </div>
+</div>
 
       <div className="timeline-copy-action">
         <button
