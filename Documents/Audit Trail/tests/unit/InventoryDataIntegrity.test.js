@@ -78,4 +78,33 @@ describe('Inventory Read Model - Data Integrity Tests', () => {
 
     expect(hasUniqueAggregateIdIndex).toBe(true);
   });
+
+  // Test 6: Reject negative and decimal event versions
+  it.each([-1, -5, 1.5, 2.7])(
+    'should reject invalid event version: %s',
+    (version) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        lastProcessedVersion: version
+      });
+
+      const error = item.validateSync();
+
+      expect(error).toBeDefined();
+      expect(error.errors.lastProcessedVersion).toBeDefined();
+    }
+  );
+
+  // Test 7: Accept valid event versions
+  it.each([0, 1, 10, 100])(
+    'should accept valid event version: %s',
+    (version) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        lastProcessedVersion: version
+      });
+
+      expect(item.validateSync()).toBeUndefined();
+    }
+  );
 });
