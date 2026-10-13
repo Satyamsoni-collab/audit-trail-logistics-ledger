@@ -47,6 +47,14 @@ const eventStoreSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
     immutable: true // Enforce immutability
+  },
+  previousHash: {
+    type: String,
+    default: 'GENESIS'
+  },
+  hash: {
+    type: String,
+    index: true
   }
 }, {
   timestamps: false, // We manually manage timestamp to ensure it's immutable
