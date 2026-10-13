@@ -76,6 +76,7 @@ const getEventDuration = (index) => {
 
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
+  const [sortBy, setSortBy] = React.useState("TIME");
   const [copyMessage, setCopyMessage] = React.useState("");
   const [exportMessage, setExportMessage] = React.useState("");
 
@@ -84,15 +85,33 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       ? shipmentEvents
       : shipmentEvents.filter((event) => event.type === filter);
 
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    if (sortBy === "SEVERITY") {
+      const severityRank = {
+        High: 3,
+        Medium: 2,
+        Normal: 1,
+      };
+
+      return (
+        severityRank[getEventSeverity(b.type)] -
+        severityRank[getEventSeverity(a.type)]
+      );
+    }
+
+    return a.time.localeCompare(b.time);
+  });
+
   const eventCount = filteredEvents.length;
+
   const severityCounts = filteredEvents.reduce(
-  (counts, event) => {
-    const severity = getEventSeverity(event.type);
-    counts[severity] += 1;
-    return counts;
-  },
-  { High: 0, Medium: 0, Normal: 0 }
-);
+    (counts, event) => {
+      const severity = getEventSeverity(event.type);
+      counts[severity] += 1;
+      return counts;
+    },
+    { High: 0, Medium: 0, Normal: 0 }
+  );
 
   const handleCopyEvent = async () => {
     if (!selectedEvent) {
@@ -127,8 +146,8 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       "Reconstructed State",
     ];
 
-    // Export only events matching the active timeline filter.
-    const rows = filteredEvents.map((event) => [
+    // Export events matching the active filter and current sort order.
+    const rows = sortedEvents.map((event) => [
       event.type,
       event.time,
       event.description,
@@ -166,7 +185,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     }, 1000);
 
     setExportMessage(
-      `Exported ${filteredEvents.length} shipment event(s) successfully.`
+      `Exported ${sortedEvents.length} shipment event(s) successfully.`
     );
   };
 
@@ -183,22 +202,23 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           <strong>{eventCount}</strong>
         </div>
       </div>
+
       <div className="severity-summary">
-  <div className="severity-summary-card high">
-    <span>High</span>
-    <strong>{severityCounts.High}</strong>
-  </div>
+        <div className="severity-summary-card high">
+          <span>High</span>
+          <strong>{severityCounts.High}</strong>
+        </div>
 
-  <div className="severity-summary-card medium">
-    <span>Medium</span>
-    <strong>{severityCounts.Medium}</strong>
-  </div>
+        <div className="severity-summary-card medium">
+          <span>Medium</span>
+          <strong>{severityCounts.Medium}</strong>
+        </div>
 
-  <div className="severity-summary-card normal">
-    <span>Normal</span>
-    <strong>{severityCounts.Normal}</strong>
-  </div>
-</div>
+        <div className="severity-summary-card normal">
+          <span>Normal</span>
+          <strong>{severityCounts.Normal}</strong>
+        </div>
+      </div>
 
       <div className="timeline-copy-action">
         <button
@@ -287,9 +307,22 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </button>
       </div>
 
+      <div className="timeline-sort">
+        <label htmlFor="timeline-sort-select">Sort events:</label>
+
+        <select
+          id="timeline-sort-select"
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+        >
+          <option value="TIME">Time (earliest first)</option>
+          <option value="SEVERITY">Severity (highest first)</option>
+        </select>
+      </div>
+
       <div className="timeline-list">
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => {
+        {sortedEvents.length > 0 ? (
+          sortedEvents.map((event) => {
             const eventIndex = shipmentEvents.findIndex(
               (item) => item.id === event.id
             );

@@ -794,3 +794,26 @@ body {
 .severity-summary-card.normal {
   border-left: 4px solid #16a34a;
 }
+.timeline-sort {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.timeline-sort label {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.timeline-sort select {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  cursor: pointer;
+}
