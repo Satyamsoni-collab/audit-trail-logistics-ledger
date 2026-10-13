@@ -7,29 +7,29 @@ const shipmentEvents = [
     time: "08:00",
     type: "CONTAINER_CREATED",
     description: "Shipment container was created.",
-    state: "Container created"
+    state: "Container created",
   },
   {
     id: 2,
     time: "10:30",
     type: "LOADED_ON_SHIP",
     description: "Container was loaded onto the ship.",
-    state: "Container loaded on ship"
+    state: "Container loaded on ship",
   },
   {
     id: 3,
     time: "14:00",
     type: "TEMPERATURE_SPIKE",
     description: "Temperature increased above the normal range.",
-    state: "Temperature alert detected"
+    state: "Temperature alert detected",
   },
   {
     id: 4,
     time: "18:00",
     type: "ARRIVED_AT_PORT",
     description: "Container arrived at the destination port.",
-    state: "Container arrived at port"
-  }
+    state: "Container arrived at port",
+  },
 ];
 
 const getEventSeverity = (eventType) => {
@@ -141,7 +141,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "ALL" ? "active" : ""}
-          onClick={() => setFilter("ALL")}
+          onClick={() => {
+            setFilter("ALL");
+            setExportMessage("");
+          }}
         >
           All
         </button>
@@ -149,7 +152,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "CONTAINER_CREATED" ? "active" : ""}
-          onClick={() => setFilter("CONTAINER_CREATED")}
+          onClick={() => {
+            setFilter("CONTAINER_CREATED");
+            setExportMessage("");
+          }}
         >
           Created
         </button>
@@ -157,7 +163,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "LOADED_ON_SHIP" ? "active" : ""}
-          onClick={() => setFilter("LOADED_ON_SHIP")}
+          onClick={() => {
+            setFilter("LOADED_ON_SHIP");
+            setExportMessage("");
+          }}
         >
           Loaded
         </button>
@@ -165,7 +174,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
-          onClick={() => setFilter("TEMPERATURE_SPIKE")}
+          onClick={() => {
+            setFilter("TEMPERATURE_SPIKE");
+            setExportMessage("");
+          }}
         >
           Temperature
         </button>
@@ -173,10 +185,26 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         <button
           type="button"
           className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
-          onClick={() => setFilter("ARRIVED_AT_PORT")}
+          onClick={() => {
+            setFilter("ARRIVED_AT_PORT");
+            setExportMessage("");
+          }}
         >
           Arrival
         </button>
+      </div>
+
+      <div className="timeline-sort">
+        <label htmlFor="timeline-sort-select">Sort events:</label>
+
+        <select
+          id="timeline-sort-select"
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+        >
+          <option value="TIME">Time (earliest first)</option>
+          <option value="SEVERITY">Severity (highest first)</option>
+        </select>
       </div>
 
       <div className="timeline-list">
