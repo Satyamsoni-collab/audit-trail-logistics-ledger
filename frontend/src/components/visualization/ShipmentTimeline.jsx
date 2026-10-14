@@ -207,8 +207,11 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     setExportMessage("");
   };
 
+  const eventCount = filteredEvents.length;
+
   return (
     <div className="shipment-timeline">
+
       <div className="timeline-header">
         <div>
           <h3>Event Timeline</h3>
@@ -219,78 +222,6 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           <span>Events</span>
           <strong>{eventCount}</strong>
         </div>
-      </div>
-
-      <div className="severity-summary">
-        <div className="severity-summary-card high">
-          <span>High</span>
-          <strong>{severityCounts.High}</strong>
-        </div>
-
-        <div className="severity-summary-card medium">
-          <span>Medium</span>
-          <strong>{severityCounts.Medium}</strong>
-        </div>
-
-        <div className="severity-summary-card normal">
-          <span>Normal</span>
-          <strong>{severityCounts.Normal}</strong>
-        </div>
-      </div>
-
-      <div className="timeline-copy-action">
-        <button
-          type="button"
-          className="copy-event-button"
-          onClick={handleCopyEvent}
-        >
-          Copy Selected Event
-        </button>
-
-        <button
-          type="button"
-          className="export-csv-button"
-          onClick={handleExportCSV}
-        >
-          Export Timeline CSV
-        </button>
-
-        {copyMessage && (
-          <span className="copy-event-message" role="status">
-            {copyMessage}
-          </span>
-        )}
-
-        {exportMessage && (
-          <span className="copy-event-message" role="status">
-            {exportMessage}
-          </span>
-        )}
-      </div>
-
-      <div className="timeline-search">
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(event) => {
-            setSearchQuery(event.target.value);
-            setExportMessage("");
-          }}
-          placeholder="Search events, time, state, or severity..."
-          aria-label="Search shipment events"
-        />
-
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchQuery("");
-              setExportMessage("");
-            }}
-          >
-            Clear
-          </button>
-        )}
       </div>
 
       <div className="timeline-filters">
@@ -349,28 +280,26 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       </div>
 
       <div className="timeline-list">
-        {sortedEvents.length > 0 ? (
-          sortedEvents.map((event) => {
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => {
             const eventIndex = shipmentEvents.findIndex(
               (item) => item.id === event.id
             );
 
             return (
               <button
-                type="button"
                 className={`timeline-item ${
                   selectedEvent?.id === event.id ? "selected" : ""
                 }`}
                 key={event.id}
-                onClick={() => {
-                  onSelectEvent(event);
-                  setCopyMessage("");
-                }}
+                onClick={() => onSelectEvent(event)}
               >
                 <div className="timeline-marker"></div>
 
                 <div className="timeline-content">
-                  <div className="timeline-time">{event.time}</div>
+                  <div className="timeline-time">
+                    {event.time}
+                  </div>
 
                   <div className="event-title">
                     <h4>{event.type}</h4>
@@ -386,11 +315,6 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
                   <p>{event.description}</p>
 
-                  <div className="event-state">
-                    <span>State</span>
-                    <strong>{event.state}</strong>
-                  </div>
-
                   <span className="event-duration">
                     {getEventDuration(eventIndex)} since previous event
                   </span>
@@ -402,11 +326,12 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           <div className="timeline-empty">
             <strong>No events found</strong>
             <p>
-              No shipment events match your search and selected filter.
+              No shipment events match the selected filter.
             </p>
           </div>
         )}
       </div>
+
     </div>
   );
 }
