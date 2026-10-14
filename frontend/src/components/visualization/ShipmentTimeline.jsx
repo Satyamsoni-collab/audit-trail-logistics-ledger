@@ -122,6 +122,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
   return (
     <div className="shipment-timeline">
+
       <div className="timeline-header">
         <div>
           <h3>Event Timeline</h3>
@@ -229,15 +230,11 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
             return (
               <button
-                type="button"
                 className={`timeline-item ${
                   selectedEvent?.id === event.id ? "selected" : ""
                 }`}
                 key={event.id}
-                onClick={() => {
-                  onSelectEvent(event);
-                  setCopyMessage("");
-                }}
+                onClick={() => onSelectEvent(event)}
               >
                 <div className="timeline-marker"></div>
 
@@ -260,11 +257,6 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
                   <p>{event.description}</p>
 
-                  <div className="event-state">
-                    <span>State</span>
-                    <strong>{event.state}</strong>
-                  </div>
-
                   <span className="event-duration">
                     {getEventDuration(eventIndex)} since previous event
                   </span>
@@ -279,6 +271,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           </div>
         )}
       </div>
+
     </div>
   );
 }
