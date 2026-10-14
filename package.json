@@ -4,8 +4,8 @@
   "description": "A smart logistics project that tracks shipments without deleting old data. It keeps a permanent history in MongoDB, uses a Node.js backend, and features a React dashboard with a time-rewind slider and charts to check past updates easily.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "start": "react-scripts start"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Satyamsoni-collab/audit-trail-logistics-ledger.git"
@@ -17,9 +17,23 @@
   "bugs": {
     "url": "https://github.com/Satyamsoni-collab/audit-trail-logistics-ledger/issues"
   },
-  "homepage": "https://github.com/Satyamsoni-collab/audit-trail-logistics-ledger#readme",
   "dependencies": {
     "dotenv": "^18.0.3",
-    "mongoose": "^9.10.1"
+    "mongoose": "^9.10.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-scripts": "^5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

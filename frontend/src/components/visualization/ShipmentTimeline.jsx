@@ -1,3 +1,4 @@
+
 import React from "react";
 
 const shipmentEvents = [
@@ -6,29 +7,29 @@ const shipmentEvents = [
     time: "08:00",
     type: "CONTAINER_CREATED",
     description: "Shipment container was created.",
-    state: "Container created"
+    state: "Container created",
   },
   {
     id: 2,
     time: "10:30",
     type: "LOADED_ON_SHIP",
     description: "Container was loaded onto the ship.",
-    state: "Container loaded on ship"
+    state: "Container loaded on ship",
   },
   {
     id: 3,
     time: "14:00",
     type: "TEMPERATURE_SPIKE",
     description: "Temperature increased above the normal range.",
-    state: "Temperature alert detected"
+    state: "Temperature alert detected",
   },
   {
     id: 4,
     time: "18:00",
     type: "ARRIVED_AT_PORT",
     description: "Container arrived at the destination port.",
-    state: "Container arrived at port"
-  }
+    state: "Container arrived at port",
+  },
 ];
 
 const getEventSeverity = (eventType) => {
@@ -75,11 +76,136 @@ const getEventDuration = (index) => {
 
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
+  const [sortBy, setSortBy] = React.useState("TIME");
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [copyMessage, setCopyMessage] = React.useState("");
+  const [exportMessage, setExportMessage] = React.useState("");
 
-  const filteredEvents =
-    filter === "ALL"
-      ? shipmentEvents
-      : shipmentEvents.filter((event) => event.type === filter);
+  const query = searchQuery.trim().toLowerCase();
+
+  const filteredEvents = shipmentEvents.filter((event) => {
+    const matchesFilter =
+      filter === "ALL" || event.type === filter;
+
+    const matchesSearch =
+      !query ||
+      event.type.toLowerCase().includes(query) ||
+      event.time.toLowerCase().includes(query) ||
+      event.description.toLowerCase().includes(query) ||
+      event.state.toLowerCase().includes(query) ||
+      getEventSeverity(event.type).toLowerCase().includes(query);
+
+    return matchesFilter && matchesSearch;
+  });
+
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    if (sortBy === "SEVERITY") {
+      const severityRank = {
+        High: 3,
+        Medium: 2,
+        Normal: 1,
+      };
+
+      return (
+        severityRank[getEventSeverity(b.type)] -
+        severityRank[getEventSeverity(a.type)]
+      );
+    }
+
+    return a.time.localeCompare(b.time);
+  });
+
+  const eventCount = filteredEvents.length;
+
+  const severityCounts = filteredEvents.reduce(
+    (counts, event) => {
+      const severity = getEventSeverity(event.type);
+      counts[severity] += 1;
+      return counts;
+    },
+    { High: 0, Medium: 0, Normal: 0 }
+  );
+
+  const handleCopyEvent = async () => {
+    if (!selectedEvent) {
+      setCopyMessage("Select an event first.");
+      return;
+    }
+
+    const details = [
+      `Event: ${selectedEvent.type}`,
+      `Time: ${selectedEvent.time}`,
+      `Severity: ${getEventSeverity(selectedEvent.type)}`,
+      `Description: ${selectedEvent.description}`,
+      `Reconstructed State: ${selectedEvent.state}`,
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(details);
+      setCopyMessage("Event details copied successfully.");
+    } catch {
+      setCopyMessage(
+        "Unable to copy. Check browser clipboard permissions."
+      );
+    }
+  };
+
+  const handleExportCSV = () => {
+    const headers = [
+      "Event Type",
+      "Time",
+      "Description",
+      "Severity",
+      "Reconstructed State",
+    ];
+
+    // Export events matching the active filter, search, and sort.
+    const rows = sortedEvents.map((event) => [
+      event.type,
+      event.time,
+      event.description,
+      getEventSeverity(event.type),
+      event.state,
+    ]);
+
+    const escapeCSV = (value) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\r\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download =
+      filter === "ALL" && !query
+        ? "shipment-timeline.csv"
+        : "shipment-timeline-filtered.csv";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+
+    setExportMessage(
+      `Exported ${sortedEvents.length} shipment event(s) successfully.`
+    );
+  };
+
+  const handleFilterChange = (nextFilter) => {
+    setFilter(nextFilter);
+    setExportMessage("");
+  };
 
   const eventCount = filteredEvents.length;
 
@@ -100,39 +226,57 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
       <div className="timeline-filters">
         <button
+          type="button"
           className={filter === "ALL" ? "active" : ""}
-          onClick={() => setFilter("ALL")}
+          onClick={() => handleFilterChange("ALL")}
         >
           All
         </button>
 
         <button
+          type="button"
           className={filter === "CONTAINER_CREATED" ? "active" : ""}
-          onClick={() => setFilter("CONTAINER_CREATED")}
+          onClick={() => handleFilterChange("CONTAINER_CREATED")}
         >
           Created
         </button>
 
         <button
+          type="button"
           className={filter === "LOADED_ON_SHIP" ? "active" : ""}
-          onClick={() => setFilter("LOADED_ON_SHIP")}
+          onClick={() => handleFilterChange("LOADED_ON_SHIP")}
         >
           Loaded
         </button>
 
         <button
+          type="button"
           className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
-          onClick={() => setFilter("TEMPERATURE_SPIKE")}
+          onClick={() => handleFilterChange("TEMPERATURE_SPIKE")}
         >
           Temperature
         </button>
 
         <button
+          type="button"
           className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
-          onClick={() => setFilter("ARRIVED_AT_PORT")}
+          onClick={() => handleFilterChange("ARRIVED_AT_PORT")}
         >
           Arrival
         </button>
+      </div>
+
+      <div className="timeline-sort">
+        <label htmlFor="timeline-sort-select">Sort events:</label>
+
+        <select
+          id="timeline-sort-select"
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+        >
+          <option value="TIME">Time (earliest first)</option>
+          <option value="SEVERITY">Severity (highest first)</option>
+        </select>
       </div>
 
       <div className="timeline-list">
