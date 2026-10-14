@@ -30,7 +30,11 @@ const inventoryItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     default: 0,
-    min: 0 // Cannot have negative inventory in this system
+    min: [0, 'Inventory quantity cannot be negative'],
+    validate: {
+      validator: Number.isInteger,
+      message: 'Inventory quantity must be an integer'
+    }
   },
   location: {
     type: String,

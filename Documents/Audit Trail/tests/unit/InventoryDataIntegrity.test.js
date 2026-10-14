@@ -107,4 +107,50 @@ describe('Inventory Read Model - Data Integrity Tests', () => {
       expect(item.validateSync()).toBeUndefined();
     }
   );
+
+  // Test 8: Reject negative and decimal inventory quantities
+  it.each([-5, -1, 2.5, 10.7])(
+    'should reject invalid inventory quantity: %s',
+    (quantity) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        quantity
+      });
+
+      const error = item.validateSync();
+
+      expect(error).toBeDefined();
+      expect(error.errors.quantity).toBeDefined();
+    }
+  );
+
+  // Test 9: Accept valid inventory quantities
+  it.each([0, 1, 10, 100])(
+    'should accept valid inventory quantity: %s',
+    (quantity) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        quantity
+      });
+
+      expect(item.validateSync()).toBeUndefined();
+      expect(item.quantity).toBe(quantity);
+    }
+  );
+
+  // Test 10: Reject invalid inventory statuses
+  it.each(['INVALID', 'PENDING', 'UNKNOWN'])(
+    'should reject invalid inventory status: %s',
+    (status) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        status
+      });
+
+      const error = item.validateSync();
+
+      expect(error).toBeDefined();
+      expect(error.errors.status).toBeDefined();
+    }
+  );
 });
