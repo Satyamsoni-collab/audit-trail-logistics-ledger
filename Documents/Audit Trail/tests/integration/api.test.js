@@ -23,6 +23,7 @@ describe('Audit Trail Ledger API Integration Tests', () => {
       // 1. Send Command to Create Item
       const createRes = await request(app)
         .post('/api/commands/inventory')
+        .set('Authorization', 'Bearer test-token')
         .set('x-user-id', 'test-user')
         .send({
           sku: 'TEST-SKU-001',
@@ -49,14 +50,20 @@ describe('Audit Trail Ledger API Integration Tests', () => {
 
     it('should add stock and verify the audit trail', async () => {
       // Setup: Create item first
-      const createRes = await request(app).post('/api/commands/inventory').send({
-        sku: 'TEST-SKU-002', name: 'Stock Test', location: 'A'
-      });
+      const createRes = await request(app)
+        .post('/api/commands/inventory')
+        .set('Authorization', 'Bearer test-token')
+        .set('x-user-id', 'test-user')
+        .send({
+          sku: 'TEST-SKU-002', name: 'Stock Test', location: 'A'
+        });
       const itemId = createRes.body.aggregateId;
 
       // 1. Command: Add Stock
       const stockRes = await request(app)
         .post(`/api/commands/inventory/${itemId}/stock`)
+        .set('Authorization', 'Bearer test-token')
+        .set('x-user-id', 'test-user')
         .send({ quantityChange: 50 });
       
       expect(stockRes.statusCode).toEqual(202);

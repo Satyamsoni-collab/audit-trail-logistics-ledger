@@ -6,17 +6,29 @@ import helmet from 'helmet';
 import commandRoutes from './api/routes/command.routes.js';
 import queryRoutes from './api/routes/query.routes.js';
 import auditRoutes from './api/routes/audit.routes.js';
+import complianceRoutes from './api/routes/compliance.routes.js';
 import { errorHandler, notFoundHandler } from './api/middlewares/errorHandler.middleware.js';
-
-// Initialize Projectors
-import './events/projectors/InventoryProjector.js';
 
 import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
+import logger from './utils/logger.js';
+
+// Initialize Projectors & Real-Time Monitoring Engines
+import './events/projectors/InventoryProjector.js';
+import './events/projectors/RealTimeAnalyticsProjector.js';
+import './events/projectors/AnomalyDetectionEngine.js';
 
 const app = express();
 
 // --- Middleware ---
+
+// HTTP Request Logging
+app.use(morgan('combined', {
+  stream: {
+    write: (message) => logger.info(message.trim())
+  }
+}));
 
 // Security Headers
 app.use(helmet());
@@ -61,6 +73,7 @@ app.use('/api/commands', commandRoutes);
 // These endpoints will query the read models/projections.
 app.use('/api/queries', queryRoutes);
 app.use('/api/v1', auditRoutes);
+app.use('/api/v1/compliance', complianceRoutes);
 // ----------------------------------------------------
 
 
