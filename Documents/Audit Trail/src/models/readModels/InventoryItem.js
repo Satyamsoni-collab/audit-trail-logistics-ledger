@@ -1,11 +1,12 @@
+
 import mongoose from 'mongoose';
 
 /**
  * Inventory Item Read Model (Projection)
- * 
+ *
  * This schema represents the "Current State" of an inventory item.
  * It is heavily optimized for queries (reads) as per the CQRS pattern.
- * This collection is updated asynchronously by event listeners projecting 
+ * This collection is updated asynchronously by event listeners projecting
  * events from the Event Store.
  */
 const inventoryItemSchema = new mongoose.Schema({
@@ -29,7 +30,11 @@ const inventoryItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     default: 0,
-    min: 0 // Cannot have negative inventory in this system
+    min: [0, 'Inventory quantity cannot be negative'],
+    validate: {
+      validator: Number.isInteger,
+      message: 'Inventory quantity must be an integer'
+    }
   },
   location: {
     type: String,
@@ -40,12 +45,17 @@ const inventoryItemSchema = new mongoose.Schema({
     enum: ['AVAILABLE', 'RESERVED', 'OUT_OF_STOCK', 'DISCONTINUED'],
     default: 'AVAILABLE'
   },
-  // We store the last processed event version to ensure we don't process 
-  // the same event twice or process them out of order (Idempotency).
+
+  // Stores the last processed event version for idempotency
   lastProcessedVersion: {
     type: Number,
     required: true,
-    default: 0
+    default: 0,
+    min: [0, 'Event version cannot be negative'],
+    validate: {
+      validator: Number.isInteger,
+      message: 'Event version must be an integer'
+    }
   }
 }, {
   timestamps: true // Tracks when the read model was last updated
