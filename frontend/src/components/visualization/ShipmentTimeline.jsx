@@ -78,10 +78,23 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
   const [copyMessage, setCopyMessage] = React.useState("");
 
-  const filteredEvents =
-    filter === "ALL"
-      ? shipmentEvents
-      : shipmentEvents.filter((event) => event.type === filter);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+
+    setExportMessage(
+      `Exported ${sortedEvents.length} shipment event(s) successfully.`
+    );
+  };
+
+  const handleFilterChange = (nextFilter) => {
+    setFilter(nextFilter);
+    setExportMessage("");
+  };
 
   const eventCount = filteredEvents.length;
 
