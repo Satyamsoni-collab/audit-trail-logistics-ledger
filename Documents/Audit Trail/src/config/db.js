@@ -8,8 +8,13 @@ const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/audit-trail-ledger';
     
-    // Connect to MongoDB
-    await mongoose.connect(mongoURI);
+    // Connect to MongoDB with enterprise connection pooling and timeouts
+    await mongoose.connect(mongoURI, {
+      maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE) || 50,
+      minPoolSize: Number(process.env.MONGO_MIN_POOL_SIZE) || 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     
     console.log(`📦 MongoDB Connected: ${mongoose.connection.host}`);
   } catch (error) {

@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import commandRoutes from './api/routes/command.routes.js';
 import queryRoutes from './api/routes/query.routes.js';
 import auditRoutes from './api/routes/audit.routes.js';
+import complianceRoutes from './api/routes/compliance.routes.js';
 import { errorHandler, notFoundHandler } from './api/middlewares/errorHandler.middleware.js';
 
 import mongoSanitize from 'express-mongo-sanitize';
@@ -70,6 +71,7 @@ app.use('/api/commands', commandRoutes);
 // These endpoints will query the read models/projections.
 app.use('/api/queries', queryRoutes);
 app.use('/api/v1', auditRoutes);
+app.use('/api/v1/compliance', complianceRoutes);
 // ----------------------------------------------------
 
 
