@@ -1,5 +1,6 @@
 import EventBus from '../EventBus.js';
 import InventoryItemReadModel from '../../models/readModels/InventoryItem.js';
+import cacheService from '../../config/redis.js';
 
 /**
  * Projector for the Inventory Item Read Model.
@@ -32,6 +33,9 @@ class InventoryProjector {
         },
         { upsert: true, new: true }
       );
+
+      // Day 19 Cache Invalidation: Invalidate any stale read model cache entry
+      await cacheService.del(`cache:inventory:${event.aggregateId}`);
 
       console.log(`[Projector] Verified/Created read model for item ${event.aggregateId} at version ${event.version}`);
     } catch (error) {
@@ -67,6 +71,10 @@ class InventoryProjector {
       }
 
       await item.save();
+
+      // Day 19 Cache Invalidation: Immediately invalidate cache so next read fetches new stock
+      await cacheService.del(`cache:inventory:${event.aggregateId}`);
+
       console.log(`[Projector] Updated stock for item ${event.aggregateId}. New Qty: ${item.quantity}`);
     } catch (error) {
       console.error(`[Projector Error] Failed to project stock update: ${error.message}`);

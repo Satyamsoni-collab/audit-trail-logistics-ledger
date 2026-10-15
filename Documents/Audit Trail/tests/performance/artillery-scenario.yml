@@ -1,0 +1,33 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+      rampTo: 50
+      name: "Warm-up phase (Ramping to 50 RPS)"
+    - duration: 30
+      arrivalRate: 50
+      name: "Sustained high-concurrency peak load"
+  defaults:
+    headers:
+      Authorization: "Bearer load-test-token"
+      x-user-id: "artillery-agent"
+
+scenarios:
+  - name: "Read-Heavy CQRS Flow with Redis Caching (80% traffic)"
+    weight: 80
+    flow:
+      - get:
+          url: "/api/queries/analytics/realtime"
+      - get:
+          url: "/api/health"
+
+  - name: "Command Write Flow (20% traffic)"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/commands/inventory"
+          json:
+            sku: "ARTILLERY-SKU-{{ $randomNumber(1000, 9999) }}"
+            name: "Artillery Benchmark Container"
+            location: "Dock 4"
