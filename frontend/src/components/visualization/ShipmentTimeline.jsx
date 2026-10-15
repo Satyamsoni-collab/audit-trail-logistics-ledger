@@ -159,7 +159,6 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       "Reconstructed State",
     ];
 
-    // Export events matching the active filter, search, and sort.
     const rows = sortedEvents.map((event) => [
       event.type,
       event.time,
@@ -304,7 +303,9 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
         <button
           type="button"
-          className={filter === "CONTAINER_CREATED" ? "active" : ""}
+          className={
+            filter === "CONTAINER_CREATED" ? "active" : ""
+          }
           onClick={() => handleFilterChange("CONTAINER_CREATED")}
         >
           Created
@@ -312,7 +313,9 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
         <button
           type="button"
-          className={filter === "LOADED_ON_SHIP" ? "active" : ""}
+          className={
+            filter === "LOADED_ON_SHIP" ? "active" : ""
+          }
           onClick={() => handleFilterChange("LOADED_ON_SHIP")}
         >
           Loaded
@@ -320,7 +323,9 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
         <button
           type="button"
-          className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
+          className={
+            filter === "TEMPERATURE_SPIKE" ? "active" : ""
+          }
           onClick={() => handleFilterChange("TEMPERATURE_SPIKE")}
         >
           Temperature
@@ -328,7 +333,9 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
         <button
           type="button"
-          className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
+          className={
+            filter === "ARRIVED_AT_PORT" ? "active" : ""
+          }
           onClick={() => handleFilterChange("ARRIVED_AT_PORT")}
         >
           Arrival
@@ -336,15 +343,21 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       </div>
 
       <div className="timeline-sort">
-        <label htmlFor="timeline-sort-select">Sort events:</label>
+        <label htmlFor="timeline-sort-select">
+          Sort events:
+        </label>
 
         <select
           id="timeline-sort-select"
           value={sortBy}
           onChange={(event) => setSortBy(event.target.value)}
         >
-          <option value="TIME">Time (earliest first)</option>
-          <option value="SEVERITY">Severity (highest first)</option>
+          <option value="TIME">
+            Time (earliest first)
+          </option>
+          <option value="SEVERITY">
+            Severity (highest first)
+          </option>
         </select>
       </div>
 
@@ -359,7 +372,9 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
               <button
                 type="button"
                 className={`timeline-item ${
-                  selectedEvent?.id === event.id ? "selected" : ""
+                  selectedEvent?.id === event.id
+                    ? "selected"
+                    : ""
                 }`}
                 key={event.id}
                 onClick={() => {
@@ -370,7 +385,9 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
                 <div className="timeline-marker"></div>
 
                 <div className="timeline-content">
-                  <div className="timeline-time">{event.time}</div>
+                  <div className="timeline-time">
+                    {event.time}
+                  </div>
 
                   <div className="event-title">
                     <h4>{event.type}</h4>

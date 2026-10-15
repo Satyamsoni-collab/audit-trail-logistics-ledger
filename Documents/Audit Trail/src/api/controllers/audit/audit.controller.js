@@ -1,4 +1,5 @@
 import AuditTrailService from '../../../services/AuditTrailService.js';
+import SnapshotService from '../../../services/SnapshotService.js';
 import InventoryItemReadModel from '../../../models/readModels/InventoryItem.js';
 
 export const getAuditHistory = async (req, res, next) => {
@@ -46,6 +47,25 @@ export const verifyAggregateState = async (req, res, next) => {
         sourceOfTruth: replayedState,
         projectedState: projectedState || null
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createSnapshot = async (req, res, next) => {
+  try {
+    const { itemId } = req.params;
+    // Assuming aggregateType is known. In a generic endpoint, we'd pass it.
+    const snapshot = await SnapshotService.takeSnapshot(itemId, 'InventoryItem');
+    
+    if (!snapshot) {
+      return res.status(404).json({ message: 'Item not found or has no events to snapshot.' });
+    }
+
+    res.status(201).json({
+      message: 'Snapshot created successfully.',
+      version: snapshot.version
     });
   } catch (error) {
     next(error);

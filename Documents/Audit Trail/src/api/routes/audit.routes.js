@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAuditHistory, verifyAggregateState } from '../controllers/audit/audit.controller.js';
+import { getAuditHistory, verifyAggregateState, createSnapshot } from '../controllers/audit/audit.controller.js';
 
 const router = Router();
 
@@ -16,5 +16,12 @@ router.get('/inventory/:itemId/audit', getAuditHistory);
  * @access Public
  */
 router.get('/inventory/:itemId/verify', verifyAggregateState);
+
+/**
+ * @route POST /api/v1/inventory/:itemId/snapshot
+ * @desc Manually trigger a snapshot for an aggregate to optimize future replays.
+ * @access Public (In production, this should be admin-only)
+ */
+router.post('/inventory/:itemId/snapshot', createSnapshot);
 
 export default router;
