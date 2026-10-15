@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 const shipmentStates = [
   {
@@ -28,7 +28,50 @@ const shipmentStates = [
 ];
 
 function StateScrubber({ currentIndex, onChange }) {
-  const currentState = shipmentStates[currentIndex];
+  const safeIndex = Math.max(
+    0,
+    Math.min(shipmentStates.length - 1, Number(currentIndex) || 0)
+  );
+
+  const currentState = shipmentStates[safeIndex];
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Do not intercept keyboard shortcuts while typing in another control.
+      if (
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.target instanceof HTMLInputElement &&
+          event.target.type !== "range" ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement ||
+        event.target?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        onChange(Math.max(0, safeIndex - 1));
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        onChange(Math.min(shipmentStates.length - 1, safeIndex + 1));
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        onChange(0);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        onChange(shipmentStates.length - 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [safeIndex, onChange]);
 
   return (
     <div className="state-scrubber">
@@ -45,9 +88,12 @@ function StateScrubber({ currentIndex, onChange }) {
         type="range"
         min="0"
         max={shipmentStates.length - 1}
-        value={currentIndex}
+        step="1"
+        value={safeIndex}
         onChange={(event) => onChange(Number(event.target.value))}
         className="scrubber-slider"
+        aria-label="Shipment history state"
+        aria-valuetext={`${currentState.time}: ${currentState.state}`}
       />
 
       <div className="scrubber-labels">
@@ -56,13 +102,17 @@ function StateScrubber({ currentIndex, onChange }) {
         ))}
       </div>
 
-      <div className="scrubber-state">
+      <div className="scrubber-state" aria-live="polite">
         <span>Current Event</span>
         <strong>{currentState.event}</strong>
 
         <span>Shipment State</span>
         <strong>{currentState.state}</strong>
       </div>
+
+      <p className="scrubber-keyboard-help">
+        Keyboard: ← Previous · → Next · Home First · End Latest
+      </p>
     </div>
   );
 }
