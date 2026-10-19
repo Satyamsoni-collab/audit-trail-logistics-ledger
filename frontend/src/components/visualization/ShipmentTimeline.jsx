@@ -77,6 +77,117 @@ const getEventDuration = (index) => {
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
   const [copyMessage, setCopyMessage] = React.useState("");
+<<<<<<< HEAD
+=======
+  const [exportMessage, setExportMessage] = React.useState("");
+
+  const query = searchQuery.trim().toLowerCase();
+
+  const filteredEvents = shipmentEvents.filter((event) => {
+    const matchesFilter =
+      filter === "ALL" || event.type === filter;
+
+    const matchesSearch =
+      !query ||
+      event.type.toLowerCase().includes(query) ||
+      event.time.toLowerCase().includes(query) ||
+      event.description.toLowerCase().includes(query) ||
+      event.state.toLowerCase().includes(query) ||
+      getEventSeverity(event.type).toLowerCase().includes(query);
+
+    return matchesFilter && matchesSearch;
+  });
+
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    if (sortBy === "SEVERITY") {
+      const severityRank = {
+        High: 3,
+        Medium: 2,
+        Normal: 1,
+      };
+
+      return (
+        severityRank[getEventSeverity(b.type)] -
+        severityRank[getEventSeverity(a.type)]
+      );
+    }
+
+    return a.time.localeCompare(b.time);
+  });
+
+  const eventCount = filteredEvents.length;
+
+  const severityCounts = filteredEvents.reduce(
+    (counts, event) => {
+      const severity = getEventSeverity(event.type);
+      counts[severity] += 1;
+      return counts;
+    },
+    { High: 0, Medium: 0, Normal: 0 }
+  );
+
+  const handleCopyEvent = async () => {
+    if (!selectedEvent) {
+      setCopyMessage("Select an event first.");
+      return;
+    }
+
+    const details = [
+      `Event: ${selectedEvent.type}`,
+      `Time: ${selectedEvent.time}`,
+      `Severity: ${getEventSeverity(selectedEvent.type)}`,
+      `Description: ${selectedEvent.description}`,
+      `Reconstructed State: ${selectedEvent.state}`,
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(details);
+      setCopyMessage("Event details copied successfully.");
+    } catch {
+      setCopyMessage(
+        "Unable to copy. Check browser clipboard permissions."
+      );
+    }
+  };
+
+  const handleExportCSV = () => {
+    const headers = [
+      "Event Type",
+      "Time",
+      "Description",
+      "Severity",
+      "Reconstructed State",
+    ];
+
+    const rows = sortedEvents.map((event) => [
+      event.type,
+      event.time,
+      event.description,
+      getEventSeverity(event.type),
+      event.state,
+    ]);
+
+    const escapeCSV = (value) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\r\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download =
+      filter === "ALL" && !query
+        ? "shipment-timeline.csv"
+        : "shipment-timeline-filtered.csv";
+>>>>>>> origin/main
 
     document.body.appendChild(link);
     link.click();
@@ -96,6 +207,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     setExportMessage("");
   };
 
+<<<<<<< HEAD
   const eventCount = filteredEvents.length;
 
   const handleCopyEvent = async () => {
@@ -120,9 +232,10 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     }
   };
 
+=======
+>>>>>>> origin/main
   return (
     <div className="shipment-timeline">
-
       <div className="timeline-header">
         <div>
           <h3>Event Timeline</h3>
@@ -135,6 +248,26 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </div>
       </div>
 
+<<<<<<< HEAD
+=======
+      <div className="severity-summary">
+        <div className="severity-summary-card high">
+          <span>High</span>
+          <strong>{severityCounts.High}</strong>
+        </div>
+
+        <div className="severity-summary-card medium">
+          <span>Medium</span>
+          <strong>{severityCounts.Medium}</strong>
+        </div>
+
+        <div className="severity-summary-card normal">
+          <span>Normal</span>
+          <strong>{severityCounts.Normal}</strong>
+        </div>
+      </div>
+
+>>>>>>> origin/main
       <div className="timeline-copy-action">
         <button
           type="button"
@@ -144,11 +277,56 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           Copy Selected Event
         </button>
 
+<<<<<<< HEAD
+=======
+        <button
+          type="button"
+          className="export-csv-button"
+          onClick={handleExportCSV}
+        >
+          Export Timeline CSV
+        </button>
+
+>>>>>>> origin/main
         {copyMessage && (
           <span className="copy-event-message" role="status">
             {copyMessage}
           </span>
         )}
+<<<<<<< HEAD
+=======
+
+        {exportMessage && (
+          <span className="copy-event-message" role="status">
+            {exportMessage}
+          </span>
+        )}
+      </div>
+
+      <div className="timeline-search">
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(event) => {
+            setSearchQuery(event.target.value);
+            setExportMessage("");
+          }}
+          placeholder="Search events, time, state, or severity..."
+          aria-label="Search shipment events"
+        />
+
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery("");
+              setExportMessage("");
+            }}
+          >
+            Clear
+          </button>
+        )}
+>>>>>>> origin/main
       </div>
 
       <div className="timeline-filters">
@@ -165,76 +343,116 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
         <button
           type="button"
+<<<<<<< HEAD
           className={filter === "CONTAINER_CREATED" ? "active" : ""}
           onClick={() => {
             setFilter("CONTAINER_CREATED");
             setExportMessage("");
           }}
+=======
+          className={
+            filter === "CONTAINER_CREATED" ? "active" : ""
+          }
+          onClick={() => handleFilterChange("CONTAINER_CREATED")}
+>>>>>>> origin/main
         >
           Created
         </button>
 
         <button
           type="button"
+<<<<<<< HEAD
           className={filter === "LOADED_ON_SHIP" ? "active" : ""}
           onClick={() => {
             setFilter("LOADED_ON_SHIP");
             setExportMessage("");
           }}
+=======
+          className={
+            filter === "LOADED_ON_SHIP" ? "active" : ""
+          }
+          onClick={() => handleFilterChange("LOADED_ON_SHIP")}
+>>>>>>> origin/main
         >
           Loaded
         </button>
 
         <button
           type="button"
+<<<<<<< HEAD
           className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
           onClick={() => {
             setFilter("TEMPERATURE_SPIKE");
             setExportMessage("");
           }}
+=======
+          className={
+            filter === "TEMPERATURE_SPIKE" ? "active" : ""
+          }
+          onClick={() => handleFilterChange("TEMPERATURE_SPIKE")}
+>>>>>>> origin/main
         >
           Temperature
         </button>
 
         <button
           type="button"
+<<<<<<< HEAD
           className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
           onClick={() => {
             setFilter("ARRIVED_AT_PORT");
             setExportMessage("");
           }}
+=======
+          className={
+            filter === "ARRIVED_AT_PORT" ? "active" : ""
+          }
+          onClick={() => handleFilterChange("ARRIVED_AT_PORT")}
+>>>>>>> origin/main
         >
           Arrival
         </button>
       </div>
 
       <div className="timeline-sort">
-        <label htmlFor="timeline-sort-select">Sort events:</label>
+        <label htmlFor="timeline-sort-select">
+          Sort events:
+        </label>
 
         <select
           id="timeline-sort-select"
           value={sortBy}
           onChange={(event) => setSortBy(event.target.value)}
         >
-          <option value="TIME">Time (earliest first)</option>
-          <option value="SEVERITY">Severity (highest first)</option>
+          <option value="TIME">
+            Time (earliest first)
+          </option>
+          <option value="SEVERITY">
+            Severity (highest first)
+          </option>
         </select>
       </div>
 
       <div className="timeline-list">
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => {
+        {sortedEvents.length > 0 ? (
+          sortedEvents.map((event) => {
             const eventIndex = shipmentEvents.findIndex(
               (item) => item.id === event.id
             );
 
             return (
               <button
+                type="button"
                 className={`timeline-item ${
-                  selectedEvent?.id === event.id ? "selected" : ""
+                  selectedEvent?.id === event.id
+                    ? "selected"
+                    : ""
                 }`}
                 key={event.id}
-                onClick={() => onSelectEvent(event)}
+                onClick={() => {
+                  onSelectEvent(event);
+                  setCopyMessage("");
+                }}
               >
                 <div className="timeline-marker"></div>
 
@@ -257,6 +475,11 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
 
                   <p>{event.description}</p>
 
+                  <div className="event-state">
+                    <span>State</span>
+                    <strong>{event.state}</strong>
+                  </div>
+
                   <span className="event-duration">
                     {getEventDuration(eventIndex)} since previous event
                   </span>
@@ -267,11 +490,16 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         ) : (
           <div className="timeline-empty">
             <strong>No events found</strong>
+<<<<<<< HEAD
             <p>No shipment events match the selected filter.</p>
+=======
+            <p>
+              No shipment events match your search and selected filter.
+            </p>
+>>>>>>> origin/main
           </div>
         )}
       </div>
-
     </div>
   );
 }

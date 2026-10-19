@@ -153,4 +153,63 @@ describe('Inventory Read Model - Data Integrity Tests', () => {
       expect(error.errors.status).toBeDefined();
     }
   );
+
+  // Test 11: Reject empty and whitespace-only strings
+  it.each([
+    ['sku', ''],
+    ['sku', '   '],
+    ['name', ''],
+    ['name', '   '],
+    ['location', ''],
+    ['location', '   ']
+  ])(
+    'should reject invalid %s value: "%s"',
+    (field, value) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        [field]: value
+      });
+
+      const error = item.validateSync();
+
+      expect(error).toBeDefined();
+      expect(error.errors[field]).toBeDefined();
+    }
+  );
+
+  // Test 12: Trim leading and trailing spaces
+  it.each([
+    ['sku', '  SKU-101  ', 'SKU-101'],
+    ['name', '  Test Inventory Item  ', 'Test Inventory Item'],
+    ['location', '  Warehouse A  ', 'Warehouse A']
+  ])(
+    'should trim spaces from %s',
+    (field, input, expected) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        [field]: input
+      });
+
+      expect(item.validateSync()).toBeUndefined();
+      expect(item[field]).toBe(expected);
+    }
+  );
+
+  // Test 13: Accept valid string fields
+  it.each([
+    ['sku', 'SKU-202'],
+    ['name', 'Laptop'],
+    ['location', 'Warehouse B']
+  ])(
+    'should accept valid %s',
+    (field, value) => {
+      const item = new InventoryItem({
+        ...validInventory,
+        [field]: value
+      });
+
+      expect(item.validateSync()).toBeUndefined();
+      expect(item[field]).toBe(value);
+    }
+  );
 });

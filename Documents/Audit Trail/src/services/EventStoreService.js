@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import crypto from 'crypto';
+=======
+
+>>>>>>> origin/main
 import Event from '../models/events/EventStore.js';
 import EventBus from '../events/EventBus.js';
 
@@ -9,6 +13,7 @@ import EventBus from '../events/EventBus.js';
 class EventStoreService {
 
   /**
+<<<<<<< HEAD
    * Computes a deterministic SHA-256 hash for an event chained to its predecessor.
    */
   static computeEventHash({ previousHash, aggregateId, version, eventType, payload, timestamp }) {
@@ -20,6 +25,79 @@ class EventStoreService {
    * Appends a new event to the Event Store.
    * Enforces Optimistic Concurrency Control and Cryptographic Hashing.
    * 
+=======
+   * Validates event data before saving it.
+   */
+  static validateEventData({
+    aggregateId,
+    aggregateType,
+    eventType,
+    payload,
+    expectedVersion,
+    actor
+  }) {
+    if (
+      typeof aggregateId !== 'string' ||
+      !aggregateId.trim()
+    ) {
+      throw new Error(
+        'ValidationError: aggregateId must be a non-empty string.'
+      );
+    }
+
+    if (
+      typeof aggregateType !== 'string' ||
+      !['InventoryItem', 'Shipment'].includes(aggregateType)
+    ) {
+      throw new Error(
+        'ValidationError: Invalid aggregateType.'
+      );
+    }
+
+    if (
+      typeof eventType !== 'string' ||
+      !eventType.trim()
+    ) {
+      throw new Error(
+        'ValidationError: eventType must be a non-empty string.'
+      );
+    }
+
+    if (
+      !payload ||
+      typeof payload !== 'object' ||
+      Array.isArray(payload)
+    ) {
+      throw new Error(
+        'ValidationError: payload must be a valid object.'
+      );
+    }
+
+    if (
+      !Number.isSafeInteger(expectedVersion) ||
+      expectedVersion < 0 ||
+      !Number.isSafeInteger(expectedVersion + 1)
+    ) {
+      throw new Error(
+        'ValidationError: expectedVersion must be a non-negative safe integer.'
+      );
+    }
+
+    if (
+      typeof actor !== 'string' ||
+      !actor.trim()
+    ) {
+      throw new Error(
+        'ValidationError: actor must be a non-empty string.'
+      );
+    }
+  }
+
+  /**
+   * Appends a new event to the Event Store.
+   * Enforces Optimistic Concurrency Control using the version number.
+   *
+>>>>>>> origin/main
    * @param {Object} eventData
    * @param {String} eventData.aggregateId
    * @param {String} eventData.aggregateType
@@ -37,6 +115,16 @@ class EventStoreService {
     expectedVersion,
     actor = 'system'
   }) {
+    // Validate inputs before writing to MongoDB
+    this.validateEventData({
+      aggregateId,
+      aggregateType,
+      eventType,
+      payload,
+      expectedVersion,
+      actor
+    });
+
     try {
       const newVersion = expectedVersion + 1;
       const timestamp = new Date();
@@ -68,29 +156,52 @@ class EventStoreService {
       });
 
       const savedEvent = await event.save();
+<<<<<<< HEAD
       console.log(`[EventStore] Appended ${eventType} to ${aggregateType} ${aggregateId} [v${newVersion}] [hash: ${hash.substring(0, 10)}...]`);
       
       // Publish event to the local Event Bus so Projectors can update Read Models
+=======
+
+      console.log(
+        `[EventStore] Appended ${eventType} to ${aggregateType} ${aggregateId} at version ${newVersion}`
+      );
+
+      // Publish event so projectors can update read models
+>>>>>>> origin/main
       EventBus.publish(eventType, savedEvent);
 
       return savedEvent;
     } catch (error) {
       if (error.code === 11000) {
-        throw new Error(`ConcurrencyException: Aggregate ${aggregateId} has been modified by another process.`);
+        throw new Error(
+          `ConcurrencyException: Aggregate ${aggregateId} has been modified by another process.`
+        );
       }
+
       throw error;
     }
   }
 
   /**
    * Retrieves the full event stream for a given aggregate.
-   * Used for "Event Replay" to rebuild state in memory.
-   * 
-   * @param {String} aggregateId 
-   * @returns {Promise<Array>} Array of events sorted by version
+   * Used for Event Replay to rebuild state in memory.
+   *
+   * @param {String} aggregateId
+   * @returns {Promise<Array>} Events sorted by version
    */
   static async getEventStream(aggregateId) {
-    return Event.find({ aggregateId }).sort({ version: 1 }).exec();
+    if (
+      typeof aggregateId !== 'string' ||
+      !aggregateId.trim()
+    ) {
+      throw new Error(
+        'ValidationError: aggregateId must be a non-empty string.'
+      );
+    }
+
+    return Event.find({ aggregateId })
+      .sort({ version: 1 })
+      .exec();
   }
 
   /**

@@ -1,14 +1,7 @@
 
 import mongoose from 'mongoose';
 
-/**
- * Inventory Item Read Model (Projection)
- *
- * This schema represents the "Current State" of an inventory item.
- * It is heavily optimized for queries (reads) as per the CQRS pattern.
- * This collection is updated asynchronously by event listeners projecting
- * events from the Event Store.
- */
+
 const inventoryItemSchema = new mongoose.Schema({
   // We use the aggregateId from the Event Store as the primary identifier here
   aggregateId: {
@@ -20,11 +13,15 @@ const inventoryItemSchema = new mongoose.Schema({
   sku: {
     type: String,
     required: true,
+    trim: true,
+    minlength: [1, 'SKU cannot be empty'],
     index: true
   },
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    minlength: [1, 'Inventory name cannot be empty']
   },
   quantity: {
     type: Number,
@@ -38,7 +35,9 @@ const inventoryItemSchema = new mongoose.Schema({
   },
   location: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    minlength: [1, 'Inventory location cannot be empty']
   },
   status: {
     type: String,
