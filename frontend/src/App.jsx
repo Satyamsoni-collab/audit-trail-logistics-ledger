@@ -1,20 +1,12 @@
-import React from "react";
-import VisualizationPanel from "./components/visualization/Visualizationpanel";
-import "./App.css";
+import React from 'react';
+import MainPage from './Mainpage';
 
 function App() {
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Audit Trail Logistics Ledger</h1>
-        <p>Shipment history and event visualization</p>
-      </header>
-
-      <main className="app-content">
-        <VisualizationPanel />
-      </main>
-    </div>
+    <MainPage />
   );
 }
 
 export default App;
+// week 1 verified
+// streak update: verified week 1 ready for review                                   echo "// daily update: oct 1 activity check" >> App.jsx
