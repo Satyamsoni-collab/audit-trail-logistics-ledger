@@ -76,9 +76,9 @@ const getEventDuration = (index) => {
 
 function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
   const [filter, setFilter] = React.useState("ALL");
-  const [sortBy, setSortBy] = React.useState("TIME");
-  const [searchQuery, setSearchQuery] = React.useState("");
   const [copyMessage, setCopyMessage] = React.useState("");
+<<<<<<< HEAD
+=======
   const [exportMessage, setExportMessage] = React.useState("");
 
   const query = searchQuery.trim().toLowerCase();
@@ -187,6 +187,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
       filter === "ALL" && !query
         ? "shipment-timeline.csv"
         : "shipment-timeline-filtered.csv";
+>>>>>>> origin/main
 
     document.body.appendChild(link);
     link.click();
@@ -206,6 +207,33 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
     setExportMessage("");
   };
 
+<<<<<<< HEAD
+  const eventCount = filteredEvents.length;
+
+  const handleCopyEvent = async () => {
+    if (!selectedEvent) {
+      setCopyMessage("Select an event first.");
+      return;
+    }
+
+    const details = [
+      `Event: ${selectedEvent.type}`,
+      `Time: ${selectedEvent.time}`,
+      `Severity: ${getEventSeverity(selectedEvent.type)}`,
+      `Description: ${selectedEvent.description}`,
+      `Reconstructed State: ${selectedEvent.state}`
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(details);
+      setCopyMessage("Event details copied successfully.");
+    } catch {
+      setCopyMessage("Unable to copy. Check browser clipboard permissions.");
+    }
+  };
+
+=======
+>>>>>>> origin/main
   return (
     <div className="shipment-timeline">
       <div className="timeline-header">
@@ -220,6 +248,8 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </div>
       </div>
 
+<<<<<<< HEAD
+=======
       <div className="severity-summary">
         <div className="severity-summary-card high">
           <span>High</span>
@@ -237,6 +267,7 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         </div>
       </div>
 
+>>>>>>> origin/main
       <div className="timeline-copy-action">
         <button
           type="button"
@@ -246,6 +277,8 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           Copy Selected Event
         </button>
 
+<<<<<<< HEAD
+=======
         <button
           type="button"
           className="export-csv-button"
@@ -254,11 +287,14 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
           Export Timeline CSV
         </button>
 
+>>>>>>> origin/main
         {copyMessage && (
           <span className="copy-event-message" role="status">
             {copyMessage}
           </span>
         )}
+<<<<<<< HEAD
+=======
 
         {exportMessage && (
           <span className="copy-event-message" role="status">
@@ -290,53 +326,89 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
             Clear
           </button>
         )}
+>>>>>>> origin/main
       </div>
 
       <div className="timeline-filters">
         <button
           type="button"
           className={filter === "ALL" ? "active" : ""}
-          onClick={() => handleFilterChange("ALL")}
+          onClick={() => {
+            setFilter("ALL");
+            setExportMessage("");
+          }}
         >
           All
         </button>
 
         <button
           type="button"
+<<<<<<< HEAD
+          className={filter === "CONTAINER_CREATED" ? "active" : ""}
+          onClick={() => {
+            setFilter("CONTAINER_CREATED");
+            setExportMessage("");
+          }}
+=======
           className={
             filter === "CONTAINER_CREATED" ? "active" : ""
           }
           onClick={() => handleFilterChange("CONTAINER_CREATED")}
+>>>>>>> origin/main
         >
           Created
         </button>
 
         <button
           type="button"
+<<<<<<< HEAD
+          className={filter === "LOADED_ON_SHIP" ? "active" : ""}
+          onClick={() => {
+            setFilter("LOADED_ON_SHIP");
+            setExportMessage("");
+          }}
+=======
           className={
             filter === "LOADED_ON_SHIP" ? "active" : ""
           }
           onClick={() => handleFilterChange("LOADED_ON_SHIP")}
+>>>>>>> origin/main
         >
           Loaded
         </button>
 
         <button
           type="button"
+<<<<<<< HEAD
+          className={filter === "TEMPERATURE_SPIKE" ? "active" : ""}
+          onClick={() => {
+            setFilter("TEMPERATURE_SPIKE");
+            setExportMessage("");
+          }}
+=======
           className={
             filter === "TEMPERATURE_SPIKE" ? "active" : ""
           }
           onClick={() => handleFilterChange("TEMPERATURE_SPIKE")}
+>>>>>>> origin/main
         >
           Temperature
         </button>
 
         <button
           type="button"
+<<<<<<< HEAD
+          className={filter === "ARRIVED_AT_PORT" ? "active" : ""}
+          onClick={() => {
+            setFilter("ARRIVED_AT_PORT");
+            setExportMessage("");
+          }}
+=======
           className={
             filter === "ARRIVED_AT_PORT" ? "active" : ""
           }
           onClick={() => handleFilterChange("ARRIVED_AT_PORT")}
+>>>>>>> origin/main
         >
           Arrival
         </button>
@@ -418,9 +490,13 @@ function ShipmentTimeline({ selectedEvent, onSelectEvent }) {
         ) : (
           <div className="timeline-empty">
             <strong>No events found</strong>
+<<<<<<< HEAD
+            <p>No shipment events match the selected filter.</p>
+=======
             <p>
               No shipment events match your search and selected filter.
             </p>
+>>>>>>> origin/main
           </div>
         )}
       </div>

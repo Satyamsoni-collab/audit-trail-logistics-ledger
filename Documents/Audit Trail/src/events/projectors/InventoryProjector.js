@@ -45,6 +45,22 @@ class InventoryProjector {
     }
 
     try {
+      // Day 13 Idempotent Upsert: Ensures replay doesn't crash on duplicate ITEM_CREATED events
+      await InventoryItemReadModel.findOneAndUpdate(
+        { aggregateId: event.aggregateId },
+        {
+          $setOnInsert: {
+            sku: event.payload.sku,
+            name: event.payload.name,
+            location: event.payload.location,
+            quantity: event.payload.quantity,
+            lastProcessedVersion: event.version
+          }
+        },
+        { upsert: true, new: true }
+      );
+
+      console.log(`[Projector] Verified/Created read model for item ${event.aggregateId} at version ${event.version}`);
       const quantity = event.payload.quantity ?? 0;
 
       if (

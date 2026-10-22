@@ -146,9 +146,10 @@ class EventStoreService {
       });
 
       const savedEvent = await event.save();
+      
       console.log(`[EventStore] Appended ${eventType} to ${aggregateType} ${aggregateId} [v${newVersion}] [hash: ${hash.substring(0, 10)}...]`);
       
-      // Publish event so projectors can update read models
+      // Publish event to the local Event Bus so Projectors can update Read Models
       EventBus.publish(eventType, savedEvent);
 
       return savedEvent;
