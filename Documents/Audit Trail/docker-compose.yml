@@ -13,8 +13,12 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - MONGODB_URI=mongodb://mongo:27017/audit-trail-ledger
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       mongo:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - audit-trail-net
@@ -36,10 +40,28 @@ services:
       - audit-trail-net
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: audit-trail-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - audit-trail-net
+    restart: unless-stopped
+
 networks:
   audit-trail-net:
     driver: bridge
 
 volumes:
   mongo-data:
+    driver: local
+  redis-data:
     driver: local

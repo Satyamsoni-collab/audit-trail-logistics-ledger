@@ -14,8 +14,10 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import logger from './utils/logger.js';
 
-// Initialize Projectors
+// Initialize Projectors & Real-Time Monitoring Engines
 import './events/projectors/InventoryProjector.js';
+import './events/projectors/RealTimeAnalyticsProjector.js';
+import './events/projectors/AnomalyDetectionEngine.js';
 
 const app = express();
 

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import crypto from 'crypto';
-=======
-
->>>>>>> origin/main
 import Event from '../models/events/EventStore.js';
 import EventBus from '../events/EventBus.js';
 
@@ -13,19 +9,14 @@ import EventBus from '../events/EventBus.js';
 class EventStoreService {
 
   /**
-<<<<<<< HEAD
    * Computes a deterministic SHA-256 hash for an event chained to its predecessor.
    */
   static computeEventHash({ previousHash, aggregateId, version, eventType, payload, timestamp }) {
     const raw = `${previousHash}|${aggregateId}|${version}|${eventType}|${JSON.stringify(payload)}|${new Date(timestamp).toISOString()}`;
     return crypto.createHash('sha256').update(raw).digest('hex');
   }
-  
+
   /**
-   * Appends a new event to the Event Store.
-   * Enforces Optimistic Concurrency Control and Cryptographic Hashing.
-   * 
-=======
    * Validates event data before saving it.
    */
   static validateEventData({
@@ -95,9 +86,8 @@ class EventStoreService {
 
   /**
    * Appends a new event to the Event Store.
-   * Enforces Optimistic Concurrency Control using the version number.
-   *
->>>>>>> origin/main
+   * Enforces Optimistic Concurrency Control and Cryptographic Hashing.
+   * 
    * @param {Object} eventData
    * @param {String} eventData.aggregateId
    * @param {String} eventData.aggregateType
@@ -156,18 +146,10 @@ class EventStoreService {
       });
 
       const savedEvent = await event.save();
-<<<<<<< HEAD
+      
       console.log(`[EventStore] Appended ${eventType} to ${aggregateType} ${aggregateId} [v${newVersion}] [hash: ${hash.substring(0, 10)}...]`);
       
       // Publish event to the local Event Bus so Projectors can update Read Models
-=======
-
-      console.log(
-        `[EventStore] Appended ${eventType} to ${aggregateType} ${aggregateId} at version ${newVersion}`
-      );
-
-      // Publish event so projectors can update read models
->>>>>>> origin/main
       EventBus.publish(eventType, savedEvent);
 
       return savedEvent;

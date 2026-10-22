@@ -10,7 +10,8 @@
     "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
     "audit-system": "node scripts/system-audit.js",
     "rebuild-projections": "node scripts/rebuild-projections.js",
-    "integrity-check": "node scripts/disaster-recovery-integrity-check.js"
+    "integrity-check": "node scripts/disaster-recovery-integrity-check.js",
+    "load-test": "node scripts/load-test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -19,6 +20,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^8.7.0",
     "helmet": "^7.1.0",
+    "ioredis": "^6.0.0",
     "mongoose": "^8.3.2",
     "morgan": "^1.12.1",
     "uuid": "^14.0.2",
