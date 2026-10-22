@@ -1,10 +1,9 @@
-import React from 'react';
-import MainPage from './Mainpage';
+
+import "./App.css";
+import VisualizationPanel from "./components/visualization/Visualizationpanel";
 
 function App() {
-  return (
-    <MainPage />
-  );
+  return <VisualizationPanel />;
 }
 
 export default App;
