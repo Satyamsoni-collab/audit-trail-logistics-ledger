@@ -1,12 +1,9 @@
-import React from 'react';
-import MainPage from './Mainpage';
+
+import "./App.css";
+import VisualizationPanel from "./components/visualization/Visualizationpanel";
 
 function App() {
-  return (
-    <MainPage />
-  );
+  return <VisualizationPanel />;
 }
 
 export default App;
-// week 1 verified
-// streak update: verified week 1 ready for review                                   echo "// daily update: oct 1 activity check" >> App.jsx
