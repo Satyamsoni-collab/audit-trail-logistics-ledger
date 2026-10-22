@@ -32,6 +32,12 @@ const eventSchema = new mongoose.Schema({
   }
 });
 
+// Prevent duplicate versions for the same aggregate
+eventSchema.index(
+  { aggregateId: 1, version: 1 },
+  { unique: true }
+);
+
 const blockUpdate = function () {
   throw new Error("Events are immutable: updates are not allowed");
 };
