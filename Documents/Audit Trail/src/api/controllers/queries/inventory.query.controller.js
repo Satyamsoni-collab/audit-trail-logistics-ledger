@@ -34,3 +34,24 @@ export const getAuditTrail = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getRealtimeAnalytics = async (req, res, next) => {
+  try {
+    const AnalyticsDashboardView = (await import('../../../models/readModels/AnalyticsDashboardView.js')).default;
+    const metrics = await AnalyticsDashboardView.findOne({ metricKey: 'global_inventory_metrics' });
+
+    res.status(200).json({
+      status: 'success',
+      data: metrics || {
+        metricKey: 'global_inventory_metrics',
+        totalItemsTracked: 0,
+        totalUnitsInStock: 0,
+        totalMovementsCount: 0,
+        outOfStockItemsCount: 0,
+        lastActivityTimestamp: new Date()
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
