@@ -7,12 +7,15 @@ import commandRoutes from './api/routes/command.routes.js';
 import queryRoutes from './api/routes/query.routes.js';
 import auditRoutes from './api/routes/audit.routes.js';
 import complianceRoutes from './api/routes/compliance.routes.js';
+import aiRoutes from './api/routes/ai.routes.js';
 import { errorHandler, notFoundHandler } from './api/middlewares/errorHandler.middleware.js';
 
 import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import logger from './utils/logger.js';
+import telemetryService from './utils/telemetry.js';
+import AutonomousRemediationAgent from './services/ai/AutonomousRemediationAgent.js';
 
 // Initialize Projectors & Real-Time Monitoring Engines
 import './events/projectors/InventoryProjector.js';
@@ -20,6 +23,21 @@ import './events/projectors/RealTimeAnalyticsProjector.js';
 import './events/projectors/AnomalyDetectionEngine.js';
 
 const app = express();
+
+// --- OpenTelemetry Distributed Tracing Middleware ---
+app.use(telemetryService.httpTracingMiddleware());
+
+// --- Autonomous Circuit Breaker Middleware ---
+app.use((req, res, next) => {
+  if (AutonomousRemediationAgent.isCircuitOpen() && req.path.startsWith('/api/commands')) {
+    return res.status(503).json({
+      status: 'error',
+      code: 'CIRCUIT_BREAKER_OPEN',
+      message: 'Service Temporarily Unavailable: Circuit breaker tripped by Autonomous Remediation Agent.'
+    });
+  }
+  next();
+});
 
 // --- Middleware ---
 
@@ -74,6 +92,13 @@ app.use('/api/commands', commandRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/v1', auditRoutes);
 app.use('/api/v1/compliance', complianceRoutes);
+app.use('/api/v1/ai', aiRoutes);
+
+// Prometheus Metrics Scraper Endpoint
+app.get('/metrics', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  res.status(200).send(telemetryService.getPrometheusMetrics());
+});
 // ----------------------------------------------------
 
 
