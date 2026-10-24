@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import SensorChart from "./SensorChart";
 import ShipmentTimeline from "./ShipmentTimeline";
 import StateScrubber from "./StateScrubber";
+import { fetchShipmentEvents } from "../../services/shipmentApi";
 
-// Demo data until the backend API is connected.
+// Demo data is shown only before a shipment is searched.
 const shipmentStates = [
   {
     type: "CONTAINER_CREATED",
@@ -34,14 +35,59 @@ function getSeverity(type) {
   return "Normal";
 }
 
+function formatEventTime(timestamp) {
+  if (!timestamp) return "Unavailable";
+
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(timestamp);
+  }
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function normalizeEvents(events = []) {
+  return events.map((event, index) => {
+    const type = event.type || event.eventType || event.event || "UNKNOWN_EVENT";
+    const payload = event.payload || {};
+
+    return {
+      ...event,
+      type,
+      time: event.time || formatEventTime(event.timestamp),
+      state:
+        event.state ||
+        payload.state ||
+        payload.description ||
+        type.replaceAll("_", " "),
+      version: event.version ?? index + 1,
+    };
+  });
+}
+
 function VisualizationPanel() {
-  const [events] = useState(shipmentStates);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shipmentId, setShipmentId] = useState("");
   const [searchedShipment, setSearchedShipment] = useState("");
   const [searchError, setSearchError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const currentState = events[currentIndex] || null;
+  // null means no API search has been performed yet.
+  const [apiEvents, setApiEvents] = useState(null);
+
+  const isSearching = searchedShipment !== "";
+  const events = apiEvents === null ? shipmentStates : apiEvents;
+  const hasEvents = events.length > 0;
+
+  const currentIndexSafe = hasEvents
+    ? Math.min(currentIndex, events.length - 1)
+    : 0;
+
+  const currentState = hasEvents ? events[currentIndexSafe] : null;
   const currentSeverity = getSeverity(currentState?.type);
   const totalEvents = events.length;
 
@@ -56,9 +102,13 @@ function VisualizationPanel() {
   const handleEventSelect = (event) => {
     if (!event) return;
 
-    const eventType = event.type || event.event;
-    const index = events.findIndex(
-      (item) => (item.type || item.event) === eventType
+    const eventType = event.type || event.eventType || event.event;
+    const eventVersion = event.version;
+
+    const index = events.findIndex((item) =>
+      eventVersion != null
+        ? item.version === eventVersion
+        : (item.type || item.eventType || item.event) === eventType
     );
 
     if (index !== -1) {
@@ -68,6 +118,8 @@ function VisualizationPanel() {
   };
 
   const handleScrubberChange = (index) => {
+    if (!hasEvents) return;
+
     const safeIndex = Math.max(
       0,
       Math.min(Number(index) || 0, events.length - 1)
@@ -77,7 +129,7 @@ function VisualizationPanel() {
     setSearchError("");
   };
 
-  const handleSearch = (event) => {
+  const handleSearch = async (event) => {
     event.preventDefault();
 
     const trimmedId = shipmentId.trim();
@@ -87,10 +139,23 @@ function VisualizationPanel() {
       return;
     }
 
-    setSearchedShipment(trimmedId);
-    setShipmentId(trimmedId);
-    setCurrentIndex(0);
+    setLoading(true);
     setSearchError("");
+    setSearchedShipment(trimmedId);
+    setApiEvents([]);
+    setCurrentIndex(0);
+
+    try {
+      const result = await fetchShipmentEvents(trimmedId);
+      setApiEvents(normalizeEvents(result.events));
+    } catch (error) {
+      setApiEvents([]);
+      setSearchError(
+        error.message || "Unable to load shipment event history."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -98,6 +163,8 @@ function VisualizationPanel() {
     setShipmentId("");
     setSearchedShipment("");
     setSearchError("");
+    setApiEvents(null);
+    setLoading(false);
   };
 
   const selectedEvent = currentState;
@@ -120,7 +187,7 @@ function VisualizationPanel() {
 
         <span className="visualization-status">
           <span className="status-indicator" />
-          Visualization Ready
+          {loading ? "Loading Events" : "Visualization Ready"}
         </span>
       </div>
 
@@ -135,7 +202,10 @@ function VisualizationPanel() {
             if (searchError) setSearchError("");
           }}
         />
-        <button type="submit">Search Shipment</button>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Searching..." : "Search Shipment"}
+        </button>
       </form>
 
       {searchError && (
@@ -144,13 +214,13 @@ function VisualizationPanel() {
         </p>
       )}
 
-      {searchedShipment && (
+      {isSearching && (
         <div className="searched-shipment">
           <span className="status-indicator" />
           <span>
-            Showing shipment: <strong>{searchedShipment}</strong>
+            Shipment: <strong>{searchedShipment}</strong>
           </span>
-          <span className="sample-data-note">Sample data</span>
+          <span className="sample-data-note">Live API</span>
         </div>
       )}
 
@@ -159,10 +229,12 @@ function VisualizationPanel() {
           <h3>Shipment Analytics</h3>
           <p>Review event activity and shipment sensor readings.</p>
         </div>
+
         <button
           type="button"
           onClick={handleReset}
           className="reset-button"
+          disabled={loading}
         >
           Reset Visualization
         </button>
@@ -171,14 +243,16 @@ function VisualizationPanel() {
       <div className="shipment-metrics">
         <article className="metric-card">
           <span className="metric-label">TOTAL EVENTS</span>
-          <strong className="metric-value">{totalEvents}</strong>
+          <strong className="metric-value">
+            {loading ? "—" : totalEvents}
+          </strong>
           <span className="metric-description">Recorded shipment events</span>
         </article>
 
         <article className="metric-card">
           <span className="metric-label">CRITICAL EVENTS</span>
           <strong className="metric-value metric-danger">
-            {criticalEvents}
+            {loading ? "—" : criticalEvents}
           </strong>
           <span className="metric-description">High-severity events</span>
         </article>
@@ -186,7 +260,7 @@ function VisualizationPanel() {
         <article className="metric-card">
           <span className="metric-label">WARNING EVENTS</span>
           <strong className="metric-value metric-warning">
-            {warningEvents}
+            {loading ? "—" : warningEvents}
           </strong>
           <span className="metric-description">Medium-severity events</span>
         </article>
@@ -198,11 +272,11 @@ function VisualizationPanel() {
               currentSeverity === "High"
                 ? "metric-danger"
                 : currentSeverity === "Medium"
-                ? "metric-warning"
-                : "metric-normal"
+                  ? "metric-warning"
+                  : "metric-normal"
             }`}
           >
-            {currentSeverity}
+            {loading ? "—" : currentState ? currentSeverity : "N/A"}
           </strong>
           <span className="metric-description">
             At {currentState?.time || "--:--"}
@@ -210,68 +284,84 @@ function VisualizationPanel() {
         </article>
       </div>
 
-      <div className="visualization-grid">
-        <SensorChart currentIndex={currentIndex} />
+      {loading && (
+        <p className="state-preview-empty" role="status">
+          Loading event history for {searchedShipment}...
+        </p>
+      )}
 
-        <ShipmentTimeline
-          selectedEvent={selectedEvent}
-          onSelectEvent={handleEventSelect}
-        />
-      </div>
+      {!loading && !searchError && isSearching && events.length === 0 && (
+        <div className="state-preview-empty">
+          <strong>No events found</strong>
+          <p>
+            No event history was returned for this shipment ID. Check the ID
+            or confirm that events exist in the backend database.
+          </p>
+        </div>
+      )}
 
-      <StateScrubber
-        events={events}
-        currentIndex={currentIndex}
-        onChange={handleScrubberChange}
-      />
+      {!loading && hasEvents && (
+        <>
+          <div className="visualization-grid">
+            <SensorChart currentIndex={currentIndexSafe} />
 
-      <div className="state-preview">
-        <div className="state-preview-header">
-          <div>
-            <p className="section-eyebrow">EVENT INSPECTOR</p>
-            <h3>Shipment State Preview</h3>
+            <ShipmentTimeline
+              selectedEvent={selectedEvent}
+              onSelectEvent={handleEventSelect}
+            />
           </div>
 
-          <span
-            className={`preview-severity ${selectedSeverity.toLowerCase()}`}
-          >
-            {selectedSeverity} Severity
-          </span>
-        </div>
+          <StateScrubber
+            events={events}
+            currentIndex={currentIndexSafe}
+            onChange={handleScrubberChange}
+          />
 
-        {selectedEvent ? (
-          <div className="state-preview-details">
-            <div className="state-row">
-              <span>Selected Event</span>
-              <strong>{selectedEvent.type}</strong>
-            </div>
+          <div className="state-preview">
+            <div className="state-preview-header">
+              <div>
+                <p className="section-eyebrow">EVENT INSPECTOR</p>
+                <h3>Shipment State Preview</h3>
+              </div>
 
-            <div className="state-row">
-              <span>Severity</span>
-              <strong
+              <span
                 className={`preview-severity ${selectedSeverity.toLowerCase()}`}
               >
-                {selectedSeverity}
-              </strong>
+                {selectedSeverity} Severity
+              </span>
             </div>
 
-            <div className="state-row">
-              <span>Event Time</span>
-              <strong>{selectedEvent.time || "Unavailable"}</strong>
-            </div>
+            {selectedEvent ? (
+              <div className="state-preview-details">
+                <div className="state-row">
+                  <span>Selected Event</span>
+                  <strong>{selectedEvent.type}</strong>
+                </div>
 
-            <div className="state-row">
-              <span>Reconstructed State</span>
-              <strong>{reconstructedState}</strong>
-            </div>
+                <div className="state-row">
+                  <span>Event Version</span>
+                  <strong>{selectedEvent.version ?? "Unavailable"}</strong>
+                </div>
+
+                <div className="state-row">
+                  <span>Event Time</span>
+                  <strong>{selectedEvent.time || "Unavailable"}</strong>
+                </div>
+
+                <div className="state-row">
+                  <span>Reconstructed State</span>
+                  <strong>{reconstructedState}</strong>
+                </div>
+              </div>
+            ) : (
+              <div className="state-preview-empty">
+                <strong>No shipment state available</strong>
+                <p>Select an event with available history.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="state-preview-empty">
-            <strong>No shipment state available</strong>
-            <p>Select a shipment with available event history.</p>
-          </div>
-        )}
-      </div>
+        </>
+      )}
 
       <p className="visualization-footer">
         Audit Trail Logistics Ledger
