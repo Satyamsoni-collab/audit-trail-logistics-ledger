@@ -1,6 +1,6 @@
-
 import EventBus from '../EventBus.js';
 import InventoryItemReadModel from '../../models/readModels/InventoryItem.js';
+import cacheService from '../../config/redis.js';
 
 /**
  * Projector for the Inventory Item Read Model.
@@ -9,7 +9,6 @@ import InventoryItemReadModel from '../../models/readModels/InventoryItem.js';
  */
 class InventoryProjector {
   constructor() {
-    // Subscribe to relevant events
     EventBus.subscribe('ITEM_CREATED', this.onItemCreated.bind(this));
     EventBus.subscribe('STOCK_ADDED', this.onStockUpdated.bind(this));
     EventBus.subscribe('STOCK_REMOVED', this.onStockUpdated.bind(this));
@@ -28,8 +27,8 @@ class InventoryProjector {
       !event.payload ||
       typeof event.payload !== 'object' ||
       Array.isArray(event.payload) ||
-      !Number.isInteger(event.version) ||
-      event.version < 0
+      !Number.isSafeInteger(event.version) ||
+      event.version < 1
     ) {
       console.error(
         '[Projector Error] Invalid inventory event received.'
@@ -46,45 +45,63 @@ class InventoryProjector {
     }
 
     try {
-      // Check whether this item already exists
-      const existingItem = await InventoryItemReadModel.findOne({
-        aggregateId: event.aggregateId
-      });
+      // Day 13 Idempotent Upsert: Ensures replay doesn't crash on duplicate ITEM_CREATED events
+      await InventoryItemReadModel.findOneAndUpdate(
+        { aggregateId: event.aggregateId },
+        {
+          $setOnInsert: {
+            sku: event.payload.sku,
+            name: event.payload.name,
+            location: event.payload.location,
+            quantity: event.payload.quantity,
+            lastProcessedVersion: event.version
+          }
+        },
+        { upsert: true, new: true }
+      );
 
-      if (existingItem) {
-        console.log(
-          `[Projector] Ignoring duplicate ITEM_CREATED for ${event.aggregateId}`
-        );
-        return;
-      }
-
-      // Validate initial inventory quantity
+      console.log(`[Projector] Verified/Created read model for item ${event.aggregateId} at version ${event.version}`);
       const quantity = event.payload.quantity ?? 0;
 
-      if (!Number.isInteger(quantity) || quantity < 0) {
+      if (
+        !Number.isSafeInteger(quantity) ||
+        quantity < 0 ||
+        typeof event.payload.sku !== 'string' ||
+        !event.payload.sku.trim() ||
+        typeof event.payload.name !== 'string' ||
+        !event.payload.name.trim() ||
+        typeof event.payload.location !== 'string' ||
+        !event.payload.location.trim()
+      ) {
         console.error(
-          `[Projector Error] Invalid initial quantity for ${event.aggregateId}`
+          `[Projector Error] Invalid initial inventory data for ${event.aggregateId}`
         );
         return;
       }
 
-      const newItem = new InventoryItemReadModel({
-        aggregateId: event.aggregateId,
-        sku: event.payload.sku,
-        name: event.payload.name,
-        location: event.payload.location,
-        quantity: quantity,
-        lastProcessedVersion: event.version,
-        status: quantity === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE'
-      });
+      // Idempotent Upsert: Ensures replay doesn't crash on duplicate ITEM_CREATED events
+      await InventoryItemReadModel.findOneAndUpdate(
+        { aggregateId: event.aggregateId },
+        {
+          $setOnInsert: {
+            sku: event.payload.sku,
+            name: event.payload.name,
+            location: event.payload.location,
+            quantity,
+            lastProcessedVersion: event.version,
+            status: quantity === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE'
+          }
+        },
+        { upsert: true, new: true }
+      );
 
-      await newItem.save();
+      // Invalidate Redis Cache
+      await cacheService.del(`cache:inventory:${event.aggregateId}`);
 
       console.log(
-        `[Projector] Created read model for item ${event.aggregateId}`
+        `[Projector] Created/Verified read model for item ${event.aggregateId} at version ${event.version}`
       );
     } catch (error) {
-      // Handle duplicate creation caused by concurrent events
       if (error.code === 11000) {
         console.log(
           `[Projector] Duplicate ITEM_CREATED ignored for ${event.aggregateId}`
@@ -103,10 +120,9 @@ class InventoryProjector {
       return;
     }
 
-    // Validate quantity change
     const quantityChange = event.payload.quantityChange;
 
-    if (!Number.isInteger(quantityChange)) {
+    if (!Number.isSafeInteger(quantityChange)) {
       console.error(
         `[Projector Error] Invalid quantityChange for ${event.aggregateId}`
       );
@@ -114,7 +130,6 @@ class InventoryProjector {
     }
 
     try {
-      // Find the current read model
       const item = await InventoryItemReadModel.findOne({
         aggregateId: event.aggregateId
       });
@@ -126,7 +141,7 @@ class InventoryProjector {
         return;
       }
 
-      // Idempotency check: ignore duplicate or old events
+      // Ignore events that have already been processed.
       if (event.version <= item.lastProcessedVersion) {
         console.log(
           `[Projector] Ignoring duplicate or old event for ${event.aggregateId}`
@@ -134,32 +149,61 @@ class InventoryProjector {
         return;
       }
 
-      // Calculate new stock quantity
-      const newQuantity = item.quantity + quantityChange;
-
-      // Prevent negative inventory
-      if (newQuantity < 0) {
+      // Process events in aggregate-version order.
+      if (event.version !== item.lastProcessedVersion + 1) {
         console.error(
-          `[Projector Error] Stock cannot become negative for ${event.aggregateId}`
+          `[Projector Error] Version gap for ${event.aggregateId}. ` +
+          `Expected ${item.lastProcessedVersion + 1}, received ${event.version}.`
         );
         return;
       }
 
-      // Apply the stock update
-      item.quantity = newQuantity;
-      item.lastProcessedVersion = event.version;
+      const newQuantity = item.quantity + quantityChange;
 
-      // Update status based on stock
-      if (newQuantity === 0) {
-        item.status = 'OUT_OF_STOCK';
-      } else {
-        item.status = 'AVAILABLE';
+      if (!Number.isSafeInteger(newQuantity) || newQuantity < 0) {
+        console.error(
+          `[Projector Error] Invalid resulting stock quantity for ${event.aggregateId}`
+        );
+        return;
       }
 
-      await item.save();
+      const newStatus =
+        newQuantity === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
+
+      // Update only if the read model still has the version and quantity we previously read.
+      const updatedItem = await InventoryItemReadModel.findOneAndUpdate(
+        {
+          aggregateId: event.aggregateId,
+          lastProcessedVersion: item.lastProcessedVersion,
+          quantity: item.quantity
+        },
+        {
+          $set: {
+            quantity: newQuantity,
+            lastProcessedVersion: event.version,
+            status: newStatus
+          }
+        },
+        {
+          new: true,
+          runValidators: true
+        }
+      );
+
+      if (!updatedItem) {
+        console.error(
+          `[Projector Error] Concurrent update detected for ${event.aggregateId}. ` +
+          'Event was not applied; retry or replay is required.'
+        );
+        return;
+      }
+
+      // Invalidate Redis Cache
+      await cacheService.del(`cache:inventory:${event.aggregateId}`);
 
       console.log(
-        `[Projector] Updated stock for item ${event.aggregateId}. New Qty: ${item.quantity}`
+        `[Projector] Updated stock for item ${event.aggregateId}. ` +
+        `New Qty: ${updatedItem.quantity}, Version: ${updatedItem.lastProcessedVersion}`
       );
     } catch (error) {
       console.error(
