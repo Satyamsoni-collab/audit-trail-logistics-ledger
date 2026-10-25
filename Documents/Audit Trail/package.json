@@ -11,7 +11,8 @@
     "audit-system": "node scripts/system-audit.js",
     "rebuild-projections": "node scripts/rebuild-projections.js",
     "integrity-check": "node scripts/disaster-recovery-integrity-check.js",
-    "load-test": "node scripts/load-test.js"
+    "load-test": "node scripts/load-test.js",
+    "get-shipment-ids": "node scripts/get-shipment-ids.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
