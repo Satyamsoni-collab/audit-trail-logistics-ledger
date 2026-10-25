@@ -1,6 +1,7 @@
 import ComplianceReportService from '../../../services/compliance/ComplianceReportService.js';
 import EventStoreService from '../../../services/EventStoreService.js';
 import SecurityAlert from '../../../models/alerts/SecurityAlert.js';
+import RegulatoryComplianceEngine from '../../../services/compliance/RegulatoryComplianceEngine.js';
 
 /**
  * Controller for Compliance, Audit Reporting, and Cryptographic Verification.
@@ -65,6 +66,57 @@ export const getSecurityAlerts = async (req, res, next) => {
       status: 'success',
       count: alerts.length,
       data: alerts
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Endpoint for SOC2, GDPR & ISO 27001 Certified Regulatory Dossier
+ */
+export const getCertifiedRegulatoryReport = async (req, res, next) => {
+  try {
+    const { aggregateId } = req.params;
+    const dossier = await RegulatoryComplianceEngine.generateCertifiedReport(aggregateId);
+
+    if (!dossier) {
+      return res.status(404).json({
+        status: 'error',
+        code: 'AGGREGATE_NOT_FOUND',
+        message: `No event stream history found for aggregate ID: ${aggregateId}`
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: dossier
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Zero-Knowledge External Auditor Verification Portal
+ * Redacts confidential payload data while proving mathematical chain continuity and signatures.
+ */
+export const getExternalAuditorVerification = async (req, res, next) => {
+  try {
+    const { aggregateId } = req.params;
+    const proof = await RegulatoryComplianceEngine.generatePrivacyPreservingAuditProof(aggregateId);
+
+    if (!proof) {
+      return res.status(404).json({
+        status: 'error',
+        code: 'AGGREGATE_NOT_FOUND',
+        message: `No event stream found for aggregate ID: ${aggregateId}`
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: proof
     });
   } catch (error) {
     next(error);
