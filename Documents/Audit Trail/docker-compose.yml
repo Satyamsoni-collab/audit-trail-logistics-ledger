@@ -15,10 +15,13 @@ services:
       - MONGODB_URI=mongodb://mongo:27017/audit-trail-ledger
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
     depends_on:
       mongo:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - audit-trail-net
@@ -56,6 +59,23 @@ services:
       - audit-trail-net
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: audit-trail-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - audit-trail-net
+    restart: unless-stopped
+
 networks:
   audit-trail-net:
     driver: bridge
@@ -64,4 +84,6 @@ volumes:
   mongo-data:
     driver: local
   redis-data:
+    driver: local
+  rabbitmq-data:
     driver: local
