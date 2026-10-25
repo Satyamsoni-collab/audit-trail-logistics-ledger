@@ -1,21 +1,43 @@
-import { EventEmitter } from 'events';
+import messageBroker from './brokers/MessageBroker.js';
+import logger from '../utils/logger.js';
 
-class EventBus extends EventEmitter {
+/**
+ * EventBus Facade
+ * 
+ * Decouples publishers and subscribers by delegating to the Enterprise Message Broker
+ * (RabbitMQ/AMQP) with distributed at-least-once delivery, trace propagation,
+ * and resilient local fallback.
+ */
+class EventBus {
   constructor() {
-    super();
-    // In production with high throughput, you might want to increase this
-    this.setMaxListeners(20);
+    this.broker = messageBroker;
+    // Auto-initialize connection in background
+    this.broker.initialize().catch((err) => {
+      logger.warn(`[EventBus] Broker background init note: ${err.message}`);
+    });
   }
 
-  publish(eventType, eventData) {
-    console.log(`[EventBus] Publishing event: ${eventType} for aggregate: ${eventData.aggregateId}`);
-    this.emit(eventType, eventData);
+  /**
+   * Publishes a domain event across the message broker with trace context.
+   * 
+   * @param {String} eventType
+   * @param {Object} eventData
+   * @param {Object} [traceContext]
+   */
+  async publish(eventType, eventData, traceContext = null) {
+    logger.debug(`[EventBus] Publishing ${eventType} for aggregate ${eventData.aggregateId}`);
+    return this.broker.publish(eventType, eventData, traceContext);
   }
 
+  /**
+   * Subscribes a consumer/projector to a domain event.
+   * 
+   * @param {String} eventType
+   * @param {Function} callback
+   */
   subscribe(eventType, callback) {
-    this.on(eventType, callback);
+    this.broker.subscribe(eventType, callback);
   }
 }
 
-// Export a singleton instance so all modules share the same bus
 export default new EventBus();

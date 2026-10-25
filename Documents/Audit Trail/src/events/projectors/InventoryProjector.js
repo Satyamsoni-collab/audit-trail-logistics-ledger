@@ -1,5 +1,6 @@
 import EventBus from '../EventBus.js';
 import InventoryItemReadModel from '../../models/readModels/InventoryItem.js';
+import cacheService from '../../config/redis.js';
 
 /**
  * Projector for the Inventory Item Read Model.
@@ -44,6 +45,22 @@ class InventoryProjector {
     }
 
     try {
+      // Day 13 Idempotent Upsert: Ensures replay doesn't crash on duplicate ITEM_CREATED events
+      await InventoryItemReadModel.findOneAndUpdate(
+        { aggregateId: event.aggregateId },
+        {
+          $setOnInsert: {
+            sku: event.payload.sku,
+            name: event.payload.name,
+            location: event.payload.location,
+            quantity: event.payload.quantity,
+            lastProcessedVersion: event.version
+          }
+        },
+        { upsert: true, new: true }
+      );
+
+      console.log(`[Projector] Verified/Created read model for item ${event.aggregateId} at version ${event.version}`);
       const quantity = event.payload.quantity ?? 0;
 
       if (
@@ -62,20 +79,27 @@ class InventoryProjector {
         return;
       }
 
-      const newItem = new InventoryItemReadModel({
-        aggregateId: event.aggregateId,
-        sku: event.payload.sku,
-        name: event.payload.name,
-        location: event.payload.location,
-        quantity,
-        lastProcessedVersion: event.version,
-        status: quantity === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE'
-      });
+      // Idempotent Upsert: Ensures replay doesn't crash on duplicate ITEM_CREATED events
+      await InventoryItemReadModel.findOneAndUpdate(
+        { aggregateId: event.aggregateId },
+        {
+          $setOnInsert: {
+            sku: event.payload.sku,
+            name: event.payload.name,
+            location: event.payload.location,
+            quantity,
+            lastProcessedVersion: event.version,
+            status: quantity === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE'
+          }
+        },
+        { upsert: true, new: true }
+      );
 
-      await newItem.save();
+      // Invalidate Redis Cache
+      await cacheService.del(`cache:inventory:${event.aggregateId}`);
 
       console.log(
-        `[Projector] Created read model for item ${event.aggregateId}`
+        `[Projector] Created/Verified read model for item ${event.aggregateId} at version ${event.version}`
       );
     } catch (error) {
       if (error.code === 11000) {
@@ -146,9 +170,7 @@ class InventoryProjector {
       const newStatus =
         newQuantity === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
 
-      // Update only if the read model still has the version and
-      // quantity we previously read. This prevents concurrent writes
-      // from overwriting one another.
+      // Update only if the read model still has the version and quantity we previously read.
       const updatedItem = await InventoryItemReadModel.findOneAndUpdate(
         {
           aggregateId: event.aggregateId,
@@ -175,6 +197,9 @@ class InventoryProjector {
         );
         return;
       }
+
+      // Invalidate Redis Cache
+      await cacheService.del(`cache:inventory:${event.aggregateId}`);
 
       console.log(
         `[Projector] Updated stock for item ${event.aggregateId}. ` +

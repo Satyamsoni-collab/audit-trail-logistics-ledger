@@ -1,4 +1,3 @@
-
 import InventoryItem from '../../src/models/readModels/InventoryItem.js';
 
 describe('Inventory Read Model - Data Integrity Tests', () => {
