@@ -7,7 +7,13 @@ function Dashboard() {
   const [selectedLog, setSelectedLog] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // Load initial logs from localStorage if available, otherwise use default mock logs
+  const defaultMockLogs = [
+    { id: 'LOG-8001', trackingNo: 'TRK-9901', event: 'Package In Transit', status: 'In Progress', timestamp: '2026-10-18 10:30', details: 'Dispatch from Central Hub. Carrier and seal verified.' },
+    { id: 'LOG-8002', trackingNo: 'TRK-9902', event: 'Customs Cleared', status: 'Completed', timestamp: '2026-10-18 11:15', details: 'All documents verified and cleared by port authority.' },
+    { id: 'LOG-8003', trackingNo: 'TRK-9903', event: 'Weight Mismatch', status: 'Flagged', timestamp: '2026-10-18 12:00', details: 'Recorded weight differs from manifested weight by 4.2kg.' },
+    { id: 'LOG-8004', trackingNo: 'TRK-9904', event: 'Out for Delivery', status: 'In Progress', timestamp: '2026-10-18 14:20', details: 'Out with local delivery agent for final drop-off.' }
+  ];
+
   const [logs, setLogs] = useState(() => {
     const savedLogs = localStorage.getItem('audit_logs');
     if (savedLogs) {
@@ -17,15 +23,9 @@ function Dashboard() {
         console.error("Failed to parse logs from localStorage", e);
       }
     }
-    return [
-      { id: 'LOG-8001', trackingNo: 'TRK-9901', event: 'Package In Transit', status: 'In Progress', timestamp: '2026-10-18 10:30', details: 'Dispatch from Central Hub. Carrier and seal verified.' },
-      { id: 'LOG-8002', trackingNo: 'TRK-9902', event: 'Customs Cleared', status: 'Completed', timestamp: '2026-10-18 11:15', details: 'All documents verified and cleared by port authority.' },
-      { id: 'LOG-8003', trackingNo: 'TRK-9903', event: 'Weight Mismatch', status: 'Flagged', timestamp: '2026-10-18 12:00', details: 'Recorded weight differs from manifested weight by 4.2kg.' },
-      { id: 'LOG-8004', trackingNo: 'TRK-9904', event: 'Out for Delivery', status: 'In Progress', timestamp: '2026-10-18 14:20', details: 'Out with local delivery agent for final drop-off.' }
-    ];
+    return defaultMockLogs;
   });
 
-  // Save logs to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('audit_logs', JSON.stringify(logs));
   }, [logs]);
@@ -55,7 +55,22 @@ function Dashboard() {
     });
   };
 
-  // CSV Export Functionality
+  const handleDeleteLog = (id) => {
+    if (window.confirm("Are you sure you want to delete this audit log?")) {
+      const updatedLogs = logs.filter(log => log.id !== id);
+      setLogs(updatedLogs);
+      setSelectedLog(null);
+    }
+  };
+
+  // Reset to default data feature
+  const handleResetData = () => {
+    if (window.confirm("Reset all logs to default sample data?")) {
+      setLogs(defaultMockLogs);
+      localStorage.setItem('audit_logs', JSON.stringify(defaultMockLogs));
+    }
+  };
+
   const exportToCSV = () => {
     const headers = ['Log ID', 'Tracking No', 'Event', 'Status', 'Timestamp', 'Details'];
     const csvRows = [
@@ -105,7 +120,22 @@ function Dashboard() {
           <h2 style={{ margin: '0 0 8px 0' }}>Logistics Ledger Dashboard</h2>
           <p style={{ color: '#666', margin: 0 }}>Overview of audit trail, metrics, and live log management.</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button 
+            onClick={handleResetData}
+            style={{
+              padding: '10px 14px',
+              backgroundColor: '#64748b',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}
+          >
+            🔄 Reset Data
+          </button>
           <button 
             onClick={exportToCSV}
             style={{
@@ -257,12 +287,21 @@ function Dashboard() {
             <p style={{ margin: '8px 0' }}><strong>Status:</strong> {selectedLog.status}</p>
             <p style={{ margin: '8px 0' }}><strong>Timestamp:</strong> {selectedLog.timestamp}</p>
             <p style={{ margin: '8px 0' }}><strong>Description:</strong> {selectedLog.details}</p>
-            <button 
-              onClick={() => setSelectedLog(null)}
-              style={{ marginTop: '16px', padding: '8px 16px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}
-            >
-              Close
-            </button>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+              <button 
+                onClick={() => handleDeleteLog(selectedLog.id)}
+                style={{ padding: '8px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}
+              >
+                Delete Log
+              </button>
+              <button 
+                onClick={() => setSelectedLog(null)}
+                style={{ padding: '8px 16px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
