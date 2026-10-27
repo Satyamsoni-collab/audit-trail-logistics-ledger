@@ -27,6 +27,12 @@ class CacheService {
       return;
     }
 
+    if (process.env.ENABLE_REDIS !== 'true' && !process.env.REDIS_HOST && !process.env.REDIS_URL) {
+      logger.info('⚡ [CacheService] Redis not explicitly enabled (set ENABLE_REDIS=true to connect). Operating with in-memory cache.');
+      this.isConnected = false;
+      return;
+    }
+
     try {
       this.client = new Redis({
         host: redisHost,
