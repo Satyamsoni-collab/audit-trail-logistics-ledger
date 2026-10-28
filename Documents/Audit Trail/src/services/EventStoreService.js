@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import Event from '../models/events/EventStore.js';
 import EventBus from '../events/EventBus.js';
+import eventStreamService from './streaming/EventStreamService.js';
 
 class EventStoreService {
   static computeEventHash({
@@ -146,6 +147,7 @@ class EventStoreService {
       );
 
       EventBus.publish(eventType, savedEvent);
+      eventStreamService.broadcast(eventType, savedEvent);
 
       return savedEvent;
     } catch (error) {

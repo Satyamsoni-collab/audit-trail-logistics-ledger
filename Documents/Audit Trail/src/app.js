@@ -8,6 +8,7 @@ import queryRoutes from './api/routes/query.routes.js';
 import auditRoutes from './api/routes/audit.routes.js';
 import complianceRoutes from './api/routes/compliance.routes.js';
 import aiRoutes from './api/routes/ai.routes.js';
+import streamRoutes from './api/routes/stream.routes.js';
 import { errorHandler, notFoundHandler } from './api/middlewares/errorHandler.middleware.js';
 
 import mongoSanitize from 'express-mongo-sanitize';
@@ -93,6 +94,8 @@ app.use('/api/queries', queryRoutes);
 app.use('/api/v1', auditRoutes);
 app.use('/api/v1/compliance', complianceRoutes);
 app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/events', streamRoutes);
+app.use('/api/events', streamRoutes);
 
 // Prometheus Metrics Scraper Endpoint
 app.get('/metrics', (req, res) => {
