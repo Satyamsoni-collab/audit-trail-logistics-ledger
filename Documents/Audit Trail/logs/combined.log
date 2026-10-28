@@ -54,3 +54,38 @@
 2026-10-28 14:13:53 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
 2026-10-28 14:13:53 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
 2026-10-28 14:13:53 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
+2026-10-28 14:57:09 [info]: 🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.
+2026-10-28 14:57:09 [info]: 📡 [EventStreamService] Real-time event streaming service initialized with SSE.
+2026-10-28 14:57:09 [info]: 🧪 [CacheService] Running in test mode. Using in-memory fallback cache.
+2026-10-28 14:57:09 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
+2026-10-28 14:57:09 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
+2026-10-28 14:57:09 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
+2026-10-28 14:57:14 [info]: 🧹 [CacheService] Invalidated cache key: cache:readmodel:analytics:realtime
+2026-10-28 14:57:14 [info]: 🧹 [CacheService] Invalidated cache key: cache:readmodel:inventory:SHP-10024
+2026-10-28 14:57:14 [info]: 🧹 [CacheService] Invalidated cache key: cache:audit-trail:SHP-10024
+2026-10-28 14:57:14 [info]: 🧹 [CacheService] Invalidated cache key: cache:readmodel:analytics:realtime
+2026-10-28 14:59:04 [info]: 🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.
+2026-10-28 14:59:04 [info]: 📡 [EventStreamService] Real-time event streaming service initialized with SSE.
+2026-10-28 14:59:04 [info]: 🧪 [CacheService] Running in test mode. Using in-memory fallback cache.
+2026-10-28 14:59:04 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
+2026-10-28 14:59:04 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
+2026-10-28 14:59:04 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
+2026-10-28 14:59:04 [info]: 🧹 [CacheService] Invalidated cache key: cache:readmodel:analytics:realtime
+2026-10-28 14:59:04 [info]: 🧹 [CacheService] Invalidated cache key: cache:readmodel:inventory:SHP-10024
+2026-10-28 14:59:04 [info]: 🧹 [CacheService] Invalidated cache key: cache:audit-trail:SHP-10024
+2026-10-28 14:59:04 [info]: [Trace:034388c0..] HTTP GET /api/v1/events/status -> 200 (15.80ms)
+2026-10-28 14:59:04 [info]: 127.0.0.1 - - [28/Oct/2026:09:29:04 +0000] "GET /api/v1/events/status HTTP/1.1" 200 119 "-" "-"
+2026-10-28 14:59:04 [debug]: [EventBus] Publishing TRANSIT_UPDATE for aggregate SHP-10024
+2026-10-28 14:59:04 [debug]: [MessageBroker (Local Fallback)] Emitting TRANSIT_UPDATE for SHP-10024
+2026-10-28 14:59:04 [info]: [Trace:f5f761fd..] HTTP POST /api/v1/events/simulate -> 200 (18.56ms)
+2026-10-28 14:59:04 [info]: 127.0.0.1 - - [28/Oct/2026:09:29:04 +0000] "POST /api/v1/events/simulate HTTP/1.1" 200 512 "-" "-"
+2026-10-28 14:59:05 [info]: 🤖 [AILogAnalytics] Initiating full system diagnostic scan...
+2026-10-28 14:59:05 [info]: [Trace:581f2572..] HTTP GET /api/v1/ai/diagnostics -> 200 (21.82ms)
+2026-10-28 14:59:05 [info]: 127.0.0.1 - - [28/Oct/2026:09:29:05 +0000] "GET /api/v1/ai/diagnostics HTTP/1.1" 200 645 "-" "-"
+2026-10-28 14:59:05 [info]: 🧹 [CacheService] Invalidated cache key: cache:readmodel:analytics:realtime
+2026-10-28 14:59:05 [info]: [Trace:cf97303b..] HTTP GET /api/queries/analytics/realtime -> 200 (12.59ms)
+2026-10-28 14:59:05 [info]: 127.0.0.1 - - [28/Oct/2026:09:29:05 +0000] "GET /api/queries/analytics/realtime HTTP/1.1" 200 232 "-" "-"
+2026-10-28 14:59:05 [debug]: ⚡ [Query] Redis Cache HIT for realtime analytics view
+2026-10-28 14:59:05 [info]: [Trace:b781640d..] HTTP GET /api/queries/analytics/realtime -> 200 (1.03ms)
+2026-10-28 14:59:05 [info]: 127.0.0.1 - - [28/Oct/2026:09:29:05 +0000] "GET /api/queries/analytics/realtime HTTP/1.1" 200 267 "-" "-"
+2026-10-28 14:59:05 [info]: 🧹 [CacheService] Invalidated cache key: cache:readmodel:analytics:realtime
