@@ -10,11 +10,21 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 // Default RBAC Clearance Headers for Zero-Trust Communication
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer frontend-day24-token',
-  'x-user-id': 'frontend-auditor',
-  'x-user-role': 'LOGISTICS_MANAGER'
+  'Accept': 'application/json'
 };
+
+function getAuthHeaders() {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('audit_auth_token') || 'frontend-day24-token' : 'frontend-day24-token';
+  const role = typeof localStorage !== 'undefined' ? localStorage.getItem('audit_user_role') || 'LOGISTICS_MANAGER' : 'LOGISTICS_MANAGER';
+  const userId = typeof localStorage !== 'undefined' ? localStorage.getItem('audit_user_id') || 'frontend-auditor' : 'frontend-auditor';
+
+  return {
+    ...DEFAULT_HEADERS,
+    'Authorization': `Bearer ${token}`,
+    'x-user-id': userId,
+    'x-user-role': role
+  };
+}
 
 /**
  * Robust HTTP client with timeout, JSON parsing, and normalized error responses.
@@ -30,7 +40,7 @@ async function apiRequest(endpoint, options = {}) {
       ...options,
       signal: options.signal || controller.signal,
       headers: {
-        ...DEFAULT_HEADERS,
+        ...getAuthHeaders(),
         ...(options.headers || {})
       }
     });
@@ -287,6 +297,47 @@ export async function simulateLogisticsEvent(payload = {}) {
     method: 'POST',
     body: JSON.stringify(payload)
   });
+}
+
+/**
+ * Enterprise JWT Authentication & Identity Login (Day 27)
+ * 
+ * @param {Object} credentials
+ * @param {String} [credentials.email]
+ * @param {String} [credentials.password]
+ * @param {String} [credentials.role]
+ */
+export async function login(credentials = {}) {
+  const data = await apiRequest('/api/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials)
+  });
+
+  if (data?.token && typeof localStorage !== 'undefined') {
+    localStorage.setItem('audit_auth_token', data.token);
+    localStorage.setItem('audit_user_role', data.user.role);
+    localStorage.setItem('audit_user_id', data.user.id);
+  }
+  return data;
+}
+
+export function logout() {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('audit_auth_token');
+    localStorage.removeItem('audit_user_role');
+    localStorage.removeItem('audit_user_id');
+  }
+}
+
+export function getStoredUser() {
+  if (typeof localStorage === 'undefined') {
+    return { id: 'frontend-auditor', role: 'LOGISTICS_MANAGER' };
+  }
+  return {
+    id: localStorage.getItem('audit_user_id') || 'frontend-auditor',
+    role: localStorage.getItem('audit_user_role') || 'LOGISTICS_MANAGER',
+    token: localStorage.getItem('audit_auth_token')
+  };
 }
 
 /**

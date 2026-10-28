@@ -23,10 +23,13 @@ import {
   PlusCircleOutlined,
   SendOutlined,
   ThunderboltFilled,
-  WifiOutlined,
   ThunderboltOutlined,
-  DatabaseOutlined
+  DatabaseOutlined,
+  SafetyCertificateOutlined,
+  LockOutlined,
+  UserOutlined
 } from '@ant-design/icons';
+import { Select } from 'antd';
 
 import TrackShipment from './components/TrackShipment.jsx';
 import RecentAuditActivity from './components/RecentAuditActivity.jsx';
@@ -36,7 +39,9 @@ import {
   getShipmentAuditHistory, 
   getRealtimeMetrics, 
   dispatchStockMovement,
-  simulateLogisticsEvent
+  simulateLogisticsEvent,
+  login,
+  getStoredUser
 } from './services/api.js';
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -62,6 +67,17 @@ const MainPage: React.FC = () => {
   const [dispatchLocation, setDispatchLocation] = useState<string>('Delhi Gateway Hub');
   const [dispatching, setDispatching] = useState<boolean>(false);
   const [simulating, setSimulating] = useState<boolean>(false);
+  const [activeRole, setActiveRole] = useState<string>(getStoredUser().role || 'LOGISTICS_MANAGER');
+
+  const handleRoleChange = async (newRole: string) => {
+    try {
+      await login({ role: newRole });
+      setActiveRole(newRole);
+      message.success(`Zero-Trust clearance updated: Active Role is now ${newRole}`);
+    } catch (err: any) {
+      message.error('Failed to switch role: ' + err.message);
+    }
+  };
 
   // Fetch live shipment data and chronological audit trail
   const loadShipmentData = useCallback(async (id: string) => {
@@ -192,14 +208,32 @@ const MainPage: React.FC = () => {
             <Title level={4} style={{ margin: 0, color: '#0f172a' }}>
               Audit Trail: Event-Sourced Logistics Ledger
             </Title>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-              <Tag color="geekblue">Day 25: Live Streaming & AI</Tag>
-              <Tag color="green" icon={<WifiOutlined />}>SSE Stream: Active</Tag>
-              <Tag color="cyan" icon={<DatabaseOutlined />}>Redis Query Cache: Enabled</Tag>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
+              <Tag color="geekblue">Day 27: DevSecOps Hardened</Tag>
+              <Tag color="green" icon={<SafetyCertificateOutlined />}>JWT + RBAC: Active</Tag>
+              <Tag color="volcano" icon={<LockOutlined />}>Redis Rate Limiting: Active</Tag>
+              <Tag color="cyan" icon={<DatabaseOutlined />}>Redis Cache: Enabled</Tag>
             </div>
           </div>
 
-          <Space wrap>
+          <Space wrap align="center">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f1f5f9', padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+              <UserOutlined style={{ color: '#64748b' }} />
+              <Text style={{ fontSize: 12, color: '#475569', fontWeight: 600 }}>Active Role:</Text>
+              <Select
+                size="small"
+                value={activeRole}
+                onChange={handleRoleChange}
+                style={{ width: 185 }}
+                options={[
+                  { value: 'LOGISTICS_MANAGER', label: 'LOGISTICS_MANAGER (Write)' },
+                  { value: 'CISO_ADMIN', label: 'CISO_ADMIN (Full Admin)' },
+                  { value: 'COMPLIANCE_AUDITOR', label: 'COMPLIANCE_AUDITOR (Read)' },
+                  { value: 'PUBLIC_VIEWER', label: 'PUBLIC_VIEWER (Restricted)' }
+                ]}
+              />
+            </div>
+
             <Button
               type="dashed"
               icon={<ThunderboltOutlined />}
