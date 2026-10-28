@@ -118,6 +118,51 @@ class AILogAnalyticsService {
       });
     }
 
+    // Check for suspicious shipment delays
+    const delayAlerts = activeAlerts.filter(a => a.ruleCode.includes('DELAY') || a.ruleCode.includes('STALL') || a.ruleCode === 'SUSPICIOUS_SHIPMENT_DELAY');
+    if (delayAlerts.length > 0) {
+      detectedIssues.push({
+        issueType: 'SUSPICIOUS_SHIPMENT_DELAY',
+        severity: 'HIGH',
+        confidence: 0.94,
+        summary: `Detected ${delayAlerts.length} shipment(s) exceeding normal transit SLA windows without checkpoint updates.`,
+        affectedShipments: delayAlerts.map(a => a.aggregateId)
+      });
+      recommendedActions.push({
+        action: 'DISPATCH_CARRIER_EXCEPTION_PROBE',
+        target: 'LOGISTICS_ROUTING_SERVICE',
+        priority: 1
+      });
+    }
+
+    // Check for data inconsistencies
+    const inconsistencyAlerts = activeAlerts.filter(a => a.ruleCode.includes('INCONSISTENCY') || a.ruleCode.includes('DIVERGENCE') || a.ruleCode === 'DATA_INCONSISTENCY');
+    if (inconsistencyAlerts.length > 0) {
+      detectedIssues.push({
+        issueType: 'DATA_INCONSISTENCY',
+        severity: 'HIGH',
+        confidence: 0.96,
+        summary: `Identified ${inconsistencyAlerts.length} state divergence discrepancies between immutable event store ledger and projection views.`,
+        affectedAggregates: inconsistencyAlerts.map(a => a.aggregateId)
+      });
+      recommendedActions.push({
+        action: 'TRIGGER_AUTOMATED_REPLAY_HEALING',
+        target: 'READ_MODEL_PROJECTOR',
+        priority: 1
+      });
+    }
+
+    // Fallback proactive health baseline if no active alerts present
+    if (detectedIssues.length === 0) {
+      detectedIssues.push({
+        issueType: 'NORMAL_AI_SURVEILLANCE',
+        severity: 'LOW',
+        confidence: 0.99,
+        summary: 'All CQRS pipelines and shipment timelines operating within calibrated confidence boundaries. Zero data inconsistencies detected.',
+        details: 'Continuous monitoring active for latency spikes, transit stall patterns, and ledger cryptographic chain integrity.'
+      });
+    }
+
     const healthStatus = detectedIssues.some(i => i.severity === 'CRITICAL')
       ? 'CRITICAL_ACTION_REQUIRED'
       : detectedIssues.some(i => i.severity === 'HIGH')

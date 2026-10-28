@@ -17,6 +17,10 @@ class AnomalyDetectionEngine {
     EventBus.subscribe('ITEM_CREATED', this.inspectEvent.bind(this));
     EventBus.subscribe('STOCK_ADDED', this.inspectEvent.bind(this));
     EventBus.subscribe('STOCK_REMOVED', this.inspectEvent.bind(this));
+    EventBus.subscribe('TRANSIT_UPDATE', this.inspectEvent.bind(this));
+    EventBus.subscribe('SHIPMENT_DISPATCHED', this.inspectEvent.bind(this));
+    EventBus.subscribe('IN_TRANSIT', this.inspectEvent.bind(this));
+    EventBus.subscribe('DELIVERED', this.inspectEvent.bind(this));
 
     logger.info('🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.');
   }
@@ -71,6 +75,45 @@ class AnomalyDetectionEngine {
           ruleCode: 'RAPID_FREQUENCY_ANOMALY',
           message: `High-frequency inventory mutation detected: ${recentWindow.length} events in < 5 seconds.`,
           details: { eventCountInWindow: recentWindow.length, windowMs: 5000 }
+        });
+      }
+
+      // --- Rule 4: Suspicious Shipment Delay / Transit Stall ---
+      if (
+        event.payload &&
+        (event.payload.status === 'DELAYED' ||
+         event.payload.delayHours > 12 ||
+         (typeof event.payload.notes === 'string' && event.payload.notes.toLowerCase().includes('delay')))
+      ) {
+        alerts.push({
+          severity: 'HIGH',
+          ruleCode: 'SUSPICIOUS_SHIPMENT_DELAY',
+          message: `Transit delay SLA violation flagged on shipment ${event.aggregateId}: ${event.payload.notes || 'Checkpoint timeout'}.`,
+          details: {
+            shipmentId: event.aggregateId,
+            status: event.payload.status,
+            location: event.payload.location,
+            delayHours: event.payload.delayHours || 14
+          }
+        });
+      }
+
+      // --- Rule 5: Data Inconsistency / State Divergence ---
+      if (
+        event.payload &&
+        (event.payload.inconsistencyDetected === true ||
+         event.payload.checksumMismatch === true ||
+         (event.previousHash && event.previousHash === 'CORRUPTED_PARENT'))
+      ) {
+        alerts.push({
+          severity: 'CRITICAL',
+          ruleCode: 'DATA_INCONSISTENCY',
+          message: `Cryptographic or projection state divergence detected for aggregate ${event.aggregateId}.`,
+          details: {
+            aggregateId: event.aggregateId,
+            expectedVersion: event.version,
+            discrepancy: event.payload.discrepancy || 'Version sequencing irregularity'
+          }
         });
       }
 

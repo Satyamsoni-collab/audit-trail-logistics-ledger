@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Table, Badge, Tag, Typography, Space, Tooltip, Input, Row, Col, Empty } from 'antd';
 import { 
   HistoryOutlined, 
@@ -6,26 +6,86 @@ import {
   UserOutlined, 
   SearchOutlined,
   CheckCircleTwoTone,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  ThunderboltOutlined,
+  WifiOutlined
 } from '@ant-design/icons';
+import { subscribeToEventStream } from '../services/api';
 
 const { Title, Text } = Typography;
 
 /**
- * Chronological Audit Activity Dashboard Component (Day 24)
+ * Chronological Audit Activity Dashboard Component (Day 25 Upgrade)
  * 
  * Fetches and renders the immutable event-sourced history for the tracked shipment.
- * Displays: Event Name, Location, Timestamp, and Status indicators (Success, In Transit).
+ * Consumes real-time events via Server-Sent Events (SSE) and immediately prepends
+ * new ledger entries to the table with animated feedback.
  */
 export const RecentAuditActivity = ({ 
-  auditEvents = [], 
+  auditEvents: initialAuditEvents = [], 
   loading = false, 
   shipmentId 
 }) => {
+  const [events, setEvents] = useState(initialAuditEvents);
   const [filterText, setFilterText] = useState('');
+  const [newlyAddedKey, setNewlyAddedKey] = useState(null);
+
+  // Sync prop changes
+  useEffect(() => {
+    setEvents(initialAuditEvents);
+  }, [initialAuditEvents]);
+
+  // Connect to live SSE Event Stream to consume real-time audit ledger updates
+  useEffect(() => {
+    const activeId = shipmentId || 'SHP-10024';
+
+    const unsubscribe = subscribeToEventStream(
+      { aggregateId: activeId },
+      (streamPayload) => {
+        console.log('⚡ [RecentAuditActivity SSE Event Received]:', streamPayload);
+        const payload = streamPayload.payload || {};
+        const eventKey = `stream-${Date.now()}`;
+        
+        let status = 'In Transit';
+        const type = (streamPayload.eventType || '').toUpperCase();
+        if (type.includes('DELIVER') || type.includes('SUCCESS') || type.includes('CLEARED')) {
+          status = 'Success';
+        } else if (type.includes('DELAY') || type.includes('EXCEPTION') || type.includes('ALERT')) {
+          status = 'Audit Alert';
+        }
+
+        const newRow = {
+          key: eventKey,
+          version: streamPayload.version ? `v${streamPayload.version}` : `v${events.length + 1}`,
+          event: formatEventName(streamPayload.eventType || payload.status || 'Transit Update'),
+          rawEventType: streamPayload.eventType || 'TRANSIT_UPDATE',
+          location: payload.location || payload.origin || 'Bhiwandi Gateway Hub',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          status,
+          actor: streamPayload.actor || 'Logistics Stream Broker',
+          hash: streamPayload.hash ? `${streamPayload.hash.substring(0, 10)}...` : '0x8b3f...live'
+        };
+
+        setNewlyAddedKey(eventKey);
+        setTimeout(() => setNewlyAddedKey(null), 3000);
+
+        setEvents((prev) => [newRow, ...prev]);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [shipmentId, events.length]);
+
+  function formatEventName(type) {
+    if (!type) return 'Status Update';
+    return String(type)
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+  }
 
   // Filter events based on search term
-  const filteredData = auditEvents.filter((item) => {
+  const filteredData = events.filter((item) => {
     if (!filterText) return true;
     const q = filterText.toLowerCase();
     return (
@@ -44,7 +104,7 @@ export const RecentAuditActivity = ({
     if (s.includes('transit') || s.includes('dispatched') || s.includes('processing')) {
       return <Badge status="processing" text={<Text strong style={{ color: '#2563eb' }}>In Transit</Text>} />;
     }
-    if (s.includes('alert') || s.includes('fail') || s.includes('diverg')) {
+    if (s.includes('alert') || s.includes('fail') || s.includes('delay') || s.includes('diverg')) {
       return <Badge status="error" text={<Text strong style={{ color: '#dc2626' }}>Audit Alert</Text>} />;
     }
     return <Badge status="default" text={status || 'Recorded'} />;
@@ -82,7 +142,7 @@ export const RecentAuditActivity = ({
       dataIndex: 'location',
       key: 'location',
       render: (location) => (
-        <Space orientation="horizontal" size={4}>
+        <Space size={4}>
           <Text style={{ color: '#334155' }}>{location || 'Hub Checkpoint'}</Text>
         </Space>
       )
@@ -166,6 +226,9 @@ export const RecentAuditActivity = ({
           <Tag color="green" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}>
             Append-Only Verified
           </Tag>
+          <Tag color="blue" icon={<ThunderboltOutlined />}>
+            Live SSE Consumer
+          </Tag>
         </Space>
       }
       bordered={true}
@@ -180,6 +243,7 @@ export const RecentAuditActivity = ({
         pagination={{ pageSize: 5, size: 'small' }} 
         size="middle" 
         loading={loading}
+        rowClassName={(record) => record.key === newlyAddedKey ? 'live-event-highlight' : ''}
         locale={{
           emptyText: (
             <Empty 

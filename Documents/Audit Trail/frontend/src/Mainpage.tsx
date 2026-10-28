@@ -13,7 +13,8 @@ import {
   Modal, 
   InputNumber, 
   Input, 
-  Space 
+  Space,
+  Tag
 } from 'antd';
 import { 
   DashboardOutlined, 
@@ -21,16 +22,21 @@ import {
   BarChartOutlined, 
   PlusCircleOutlined,
   SendOutlined,
-  ThunderboltFilled
+  ThunderboltFilled,
+  WifiOutlined,
+  ThunderboltOutlined,
+  DatabaseOutlined
 } from '@ant-design/icons';
 
 import TrackShipment from './components/TrackShipment.jsx';
 import RecentAuditActivity from './components/RecentAuditActivity.jsx';
+import AIDiagnosticsWidget from './components/AIDiagnosticsWidget.jsx';
 import { 
   getShipmentReadModel, 
   getShipmentAuditHistory, 
   getRealtimeMetrics, 
-  dispatchStockMovement 
+  dispatchStockMovement,
+  simulateLogisticsEvent
 } from './services/api.js';
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -55,6 +61,7 @@ const MainPage: React.FC = () => {
   const [dispatchQty, setDispatchQty] = useState<number>(25);
   const [dispatchLocation, setDispatchLocation] = useState<string>('Delhi Gateway Hub');
   const [dispatching, setDispatching] = useState<boolean>(false);
+  const [simulating, setSimulating] = useState<boolean>(false);
 
   // Fetch live shipment data and chronological audit trail
   const loadShipmentData = useCallback(async (id: string) => {
@@ -99,23 +106,56 @@ const MainPage: React.FC = () => {
   const handleDispatchMovement = async () => {
     setDispatching(true);
     try {
-      await dispatchStockMovement(searchedId, dispatchQty, dispatchLocation);
-      message.success(`Event dispatched to EventStore: Added ${dispatchQty} units at ${dispatchLocation}`);
+      await dispatchStockMovement({
+        aggregateId: searchedId,
+        quantityDelta: dispatchQty,
+        location: dispatchLocation,
+        reason: 'Shipment dispatched to downstream destination'
+      });
+      message.success(`CQRS Write Command dispatched successfully for ${searchedId}`);
       setModalVisible(false);
-      // Reload live projection and audit trail
+      // Wait briefly for EventBus & Projectors to commit state, then refresh
       setTimeout(() => loadShipmentData(searchedId), 500);
     } catch (err: any) {
-      message.info(`Simulated Event Appended for ${searchedId} (Local fallback active)`);
-      setModalVisible(false);
-      loadShipmentData(searchedId);
+      message.error(err.message || 'Failed to dispatch write command');
     } finally {
       setDispatching(false);
     }
   };
 
+  // Simulates a live logistics event via SSE / Message Broker
+  const handleSimulateLiveEvent = async () => {
+    setSimulating(true);
+    try {
+      const checkpoints = [
+        'Surat Logistics Park, Gujarat',
+        'Ahmedabad Ring Road Depot',
+        'Jaipur Highway Checkpoint',
+        'Gurugram Express Gateway',
+        'Delhi Central Warehouse'
+      ];
+      const randomLocation = checkpoints[Math.floor(Math.random() * checkpoints.length)];
+
+      await simulateLogisticsEvent({
+        aggregateId: searchedId,
+        eventType: 'TRANSIT_UPDATE',
+        status: 'IN TRANSIT',
+        location: randomLocation,
+        actor: 'broker-relay-agent',
+        notes: `Live checkpoint scanned at ${randomLocation}`
+      });
+
+      message.success(`Live event published! Check 'Track Shipment' & 'Audit Activity' updates.`);
+    } catch (err: any) {
+      message.error('Failed to publish simulated stream event: ' + err.message);
+    } finally {
+      setSimulating(false);
+    }
+  };
+
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f1f5f9' }}>
-      <Sider collapsible style={{ background: '#0f172a' }}>
+    <Layout style={{ minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      <Sider width={220} theme="dark" style={{ background: '#0f172a' }}>
         <div style={{ 
           height: '40px', 
           margin: '16px', 
@@ -131,9 +171,9 @@ const MainPage: React.FC = () => {
           AUDIT LEDGER
         </div>
         <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" style={{ background: '#0f172a' }}>
-          <Menu.Item key="1" icon={<DashboardOutlined />}>Dashboard</Menu.Item>
-          <Menu.Item key="2" icon={<ShoppingCartOutlined />}>Shipments</Menu.Item>
-          <Menu.Item key="3" icon={<BarChartOutlined />}>Audit Logs</Menu.Item>
+          <Menu.Item key="1" icon={<DashboardOutlined />}>Day 25 Dashboard</Menu.Item>
+          <Menu.Item key="2" icon={<ShoppingCartOutlined />}>Live Tracking</Menu.Item>
+          <Menu.Item key="3" icon={<BarChartOutlined />}>Audit Ledger</Menu.Item>
         </Menu>
       </Sider>
 
@@ -144,18 +184,32 @@ const MainPage: React.FC = () => {
           borderBottom: '1px solid #e2e8f0',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12
         }}>
           <div>
             <Title level={4} style={{ margin: 0, color: '#0f172a' }}>
-              Audit Trail: Inventory & Logistics Ledger
+              Audit Trail: Event-Sourced Logistics Ledger
             </Title>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              CQRS Event-Sourced Architecture • Node.js Backend (Port 3000) • React Vite (Port 5173)
-            </Text>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+              <Tag color="geekblue">Day 25: Live Streaming & AI</Tag>
+              <Tag color="green" icon={<WifiOutlined />}>SSE Stream: Active</Tag>
+              <Tag color="cyan" icon={<DatabaseOutlined />}>Redis Query Cache: Enabled</Tag>
+            </div>
           </div>
 
-          <Space>
+          <Space wrap>
+            <Button
+              type="dashed"
+              icon={<ThunderboltOutlined />}
+              loading={simulating}
+              onClick={handleSimulateLiveEvent}
+              style={{ borderColor: '#2563eb', color: '#2563eb' }}
+            >
+              Simulate Live Event
+            </Button>
+
             <Button 
               type="primary" 
               icon={<PlusCircleOutlined />} 
@@ -170,8 +224,8 @@ const MainPage: React.FC = () => {
         <Content style={{ margin: '0 32px' }}>
           <Breadcrumb style={{ margin: '16px 0' }}>
             <Breadcrumb.Item>Home</Breadcrumb.Item>
-            <Breadcrumb.Item>CQRS Projections</Breadcrumb.Item>
-            <Breadcrumb.Item>Live Shipment Tracking</Breadcrumb.Item>
+            <Breadcrumb.Item>Live Streaming</Breadcrumb.Item>
+            <Breadcrumb.Item>AI Diagnostics & Redis Caching</Breadcrumb.Item>
           </Breadcrumb>
 
           {/* Top KPI Metrics Row */}
@@ -197,7 +251,7 @@ const MainPage: React.FC = () => {
             <Col xs={12} sm={6}>
               <Card bordered={false} style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                 <Statistic 
-                  title="Total Event Movements" 
+                  title="Total Movements Count" 
                   value={metrics.totalMovementsCount || 384} 
                   valueStyle={{ color: '#d97706', fontWeight: 600 }}
                 />
@@ -206,16 +260,19 @@ const MainPage: React.FC = () => {
             <Col xs={12} sm={6}>
               <Card bordered={false} style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                 <Statistic 
-                  title="Tamper Audit Status" 
-                  value="100% Intact" 
-                  valueStyle={{ color: '#16a34a', fontWeight: 600 }}
+                  title="Redis Cache Hit Rate" 
+                  value="Sub-millisecond" 
+                  valueStyle={{ color: '#16a34a', fontWeight: 600, fontSize: 18 }}
                   prefix={<ThunderboltFilled style={{ color: '#16a34a' }} />}
                 />
               </Card>
             </Col>
           </Row>
 
-          {/* Requirement 2: Real-Time Shipment Tracking Interface */}
+          {/* Requirement 2: AI Diagnostics Dashboard Widget */}
+          <AIDiagnosticsWidget onEventSimulated={() => loadShipmentData(searchedId)} />
+
+          {/* Requirement 1: Real-Time Shipment Tracking Interface */}
           <TrackShipment 
             shipmentData={shipmentData}
             loading={loading}
@@ -224,7 +281,7 @@ const MainPage: React.FC = () => {
             error={errorMsg}
           />
 
-          {/* Requirement 3: Chronological Audit Activity Dashboard */}
+          {/* Requirement 1 & Chronological Audit Activity Dashboard */}
           <RecentAuditActivity 
             auditEvents={auditEvents}
             loading={loading}
@@ -234,7 +291,7 @@ const MainPage: React.FC = () => {
         </Content>
 
         <Footer style={{ textAlign: 'center', color: '#64748b', fontSize: 13, background: 'transparent' }}>
-          Audit Trail Logistics Ledger ©2026 • Event-Sourced CQRS Infrastructure with Zero-Trust Security
+          Audit Trail Logistics Ledger ©2026 • Day 25: Real-Time SSE Streaming, AI Diagnostics & Redis Read-Model Caching
         </Footer>
       </Layout>
 

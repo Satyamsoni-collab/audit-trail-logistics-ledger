@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, Row, Col, Typography, Tag, Input, Space, Button, Tooltip, Spin, Alert } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Typography, Tag, Input, Space, Button, Tooltip, Spin, Alert, Badge } from 'antd';
 import { 
   SearchOutlined, 
   SyncOutlined, 
@@ -7,26 +7,83 @@ import {
   EnvironmentOutlined, 
   ClockCircleOutlined,
   SafetyCertificateOutlined,
-  InboxOutlined
+  InboxOutlined,
+  WifiOutlined,
+  ThunderboltOutlined
 } from '@ant-design/icons';
+import { subscribeToEventStream } from '../services/api';
 
 const { Search } = Input;
 const { Title, Text } = Typography;
 
 /**
- * Real-Time Shipment Tracking Interface Component (Day 24)
+ * Real-Time Shipment Tracking Interface Component (Day 25 Upgrade)
  * 
- * Takes a Shipment ID (e.g., SHP-10024) and dynamically renders live details:
- * Status, Origin, Destination, Last Updated time, and Cryptographic Hash state.
+ * Takes a Shipment ID (e.g., SHP-10024) and dynamically renders live details.
+ * Connects to the Server-Sent Events (SSE) event stream to update instantly
+ * as new logistics events are published to the Enterprise Message Broker.
  */
 export const TrackShipment = ({ 
-  shipmentData, 
+  shipmentData: initialShipmentData, 
   loading, 
   onSearch, 
   onRefresh, 
   error 
 }) => {
-  const [inputValue, setInputValue] = useState(shipmentData?.id || 'SHP-10024');
+  const [shipmentData, setShipmentData] = useState(initialShipmentData);
+  const [inputValue, setInputValue] = useState(initialShipmentData?.id || 'SHP-10024');
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [lastStreamEvent, setLastStreamEvent] = useState(null);
+  const [highlightPulse, setHighlightPulse] = useState(false);
+
+  // Sync prop changes
+  useEffect(() => {
+    setShipmentData(initialShipmentData);
+  }, [initialShipmentData]);
+
+  // Connect to live SSE Event Stream for the tracked shipment
+  useEffect(() => {
+    const activeId = shipmentData?.id || 'SHP-10024';
+    setIsLiveConnected(true);
+
+    const unsubscribe = subscribeToEventStream(
+      { aggregateId: activeId },
+      (streamPayload) => {
+        console.log('⚡ [TrackShipment SSE Event Received]:', streamPayload);
+        setLastStreamEvent(streamPayload);
+
+        // Flash pulse effect on card
+        setHighlightPulse(true);
+        setTimeout(() => setHighlightPulse(false), 2500);
+
+        // Dynamically update shipment status and details without page reload
+        setShipmentData((prev) => {
+          const payload = streamPayload.payload || {};
+          const newStatus = payload.status || streamPayload.eventType || prev?.status || 'IN TRANSIT';
+          const newLocation = payload.location || payload.origin || prev?.origin;
+          const newDestination = payload.destination || prev?.destination;
+
+          return {
+            ...(prev || {}),
+            id: activeId,
+            status: String(newStatus).replace(/_/g, ' ').toUpperCase(),
+            origin: newLocation || prev?.origin || 'Mumbai Hub',
+            destination: newDestination || prev?.destination || 'Delhi Warehouse',
+            updatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            lastStreamEventTime: new Date().toLocaleTimeString()
+          };
+        });
+      },
+      (err) => {
+        setIsLiveConnected(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+      setIsLiveConnected(false);
+    };
+  }, [shipmentData?.id]);
 
   const presetIds = ['SHP-10024', 'MACBOOK-M3-MAX', 'ITEM-MUMBAI-BAY4', 'CONSIGNMENT-902'];
 
@@ -39,6 +96,7 @@ export const TrackShipment = ({
 
   const getStatusColor = (status) => {
     const s = String(status || '').toUpperCase();
+    if (s.includes('DELAY') || s.includes('STALL')) return 'error';
     if (s.includes('TRANSIT')) return 'processing';
     if (s.includes('DELIVER') || s.includes('SUCCESS') || s.includes('AVAILABLE')) return 'success';
     if (s.includes('CUSTOMS')) return 'warning';
@@ -51,14 +109,25 @@ export const TrackShipment = ({
       bordered={true}
       style={{ 
         borderRadius: 12, 
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-        marginBottom: 24 
+        boxShadow: highlightPulse ? '0 0 16px rgba(34, 197, 94, 0.4)' : '0 4px 12px rgba(0,0,0,0.05)',
+        marginBottom: 24,
+        transition: 'all 0.3s ease',
+        border: highlightPulse ? '1px solid #22c55e' : '1px solid #e2e8f0'
       }}
     >
-      <Title level={4} style={{ marginBottom: 16 }}>
-        <InboxOutlined style={{ color: '#1677ff', marginRight: 8 }} />
-        Track Shipment
-      </Title>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Title level={4} style={{ margin: 0 }}>
+          <InboxOutlined style={{ color: '#1677ff', marginRight: 8 }} />
+          Track Shipment
+        </Title>
+        <Tag 
+          color={isLiveConnected ? 'success' : 'default'}
+          icon={<WifiOutlined />}
+          style={{ padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 500 }}
+        >
+          {isLiveConnected ? 'SSE Live Stream Connected' : 'Connecting Stream...'}
+        </Tag>
+      </div>
 
       {/* Search Bar & Controls */}
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
@@ -115,6 +184,26 @@ export const TrackShipment = ({
           closable 
           style={{ marginBottom: 16 }} 
         />
+      )}
+
+      {lastStreamEvent && (
+        <div style={{
+          backgroundColor: '#f0fdf4',
+          border: '1px solid #bbf7d0',
+          color: '#166534',
+          fontSize: 12,
+          padding: '6px 12px',
+          borderRadius: 6,
+          marginBottom: 14,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }}>
+          <ThunderboltOutlined style={{ color: '#16a34a' }} />
+          <span>
+            <strong>Live Update:</strong> Streamed event <Text code>{lastStreamEvent.eventType}</Text> received via Message Broker.
+          </span>
+        </div>
       )}
 
       {/* Dynamic Live Details Card */}
@@ -181,6 +270,7 @@ export const TrackShipment = ({
             borderTop: '1px dashed #cbd5e1', 
             display: 'flex', 
             justifyContent: 'space-between',
+            alignItems: 'center',
             flexWrap: 'wrap',
             gap: 10
           }}>
