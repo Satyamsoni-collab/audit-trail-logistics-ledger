@@ -1,2 +1,56 @@
 2026-10-08 19:38:34 [info]: ::1 - - [08/Oct/2026:14:08:34 +0000] "GET /api/health HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
 2026-10-08 19:38:34 [info]: ::1 - - [08/Oct/2026:14:08:34 +0000] "GET /favicon.ico HTTP/1.1" 404 116 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+2026-10-26 20:13:42 [info]: 🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.
+2026-10-26 20:13:42 [info]: ⚡ [CacheService] Redis not explicitly enabled (set ENABLE_REDIS=true to connect). Operating with in-memory cache.
+2026-10-26 20:13:42 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
+2026-10-26 20:13:42 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
+2026-10-26 20:13:42 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
+2026-10-26 20:13:48 [info]: 🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.
+2026-10-26 20:13:48 [info]: ⚡ [CacheService] Redis not explicitly enabled (set ENABLE_REDIS=true to connect). Operating with in-memory cache.
+2026-10-26 20:13:48 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
+2026-10-26 20:13:48 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
+2026-10-26 20:13:48 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
+2026-10-26 20:14:00 [info]: 🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.
+2026-10-26 20:14:00 [info]: ⚡ [CacheService] Redis not explicitly enabled (set ENABLE_REDIS=true to connect). Operating with in-memory cache.
+2026-10-26 20:14:00 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
+2026-10-26 20:14:00 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
+2026-10-26 20:14:00 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
+2026-10-26 20:14:20 [info]: 🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.
+2026-10-26 20:14:20 [info]: ⚡ [CacheService] Redis not explicitly enabled (set ENABLE_REDIS=true to connect). Operating with in-memory cache.
+2026-10-26 20:14:20 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
+2026-10-26 20:14:20 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
+2026-10-26 20:14:20 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
+2026-10-26 20:15:01 [info]: [Trace:c2adc2a1..] HTTP GET /api/health -> 200 (13.86ms)
+2026-10-26 20:15:01 [info]: ::1 - - [26/Oct/2026:14:45:01 +0000] "GET /api/health HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.143.1 Chrome/150.0.7871.250 Electron/43.7.7 Safari/537.36"
+2026-10-26 20:15:01 [info]: [Trace:3f6d60fd..] HTTP GET /favicon.ico -> 404 (1.02ms)
+2026-10-26 20:15:01 [info]: ::1 - - [26/Oct/2026:14:45:01 +0000] "GET /favicon.ico HTTP/1.1" 404 116 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.143.1 Chrome/150.0.7871.250 Electron/43.7.7 Safari/537.36"
+2026-10-26 20:15:21 [info]: [Trace:3b7a5cdb..] HTTP GET /api/health -> 200 (4.30ms)
+2026-10-26 20:15:21 [info]: ::1 - - [26/Oct/2026:14:45:21 +0000] "GET /api/health HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:15:21 [info]: [Trace:996f5b5c..] HTTP GET /favicon.ico -> 404 (2.18ms)
+2026-10-26 20:15:21 [info]: ::1 - - [26/Oct/2026:14:45:21 +0000] "GET /favicon.ico HTTP/1.1" 404 116 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:15:27 [info]: [Trace:b9562895..] HTTP GET /metrics -> 200 (1.54ms)
+2026-10-26 20:15:27 [info]: ::1 - - [26/Oct/2026:14:45:27 +0000] "GET /metrics HTTP/1.1" 200 656 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:15:38 [info]: [Trace:2eac93a6..] HTTP GET /api/health -> 200 (2.72ms)
+2026-10-26 20:15:38 [info]: ::1 - - [26/Oct/2026:14:45:38 +0000] "GET /api/health HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:19:52 [info]: [Trace:4aca07e1..] HTTP GET /api/health/metrics -> 404 (6.26ms)
+2026-10-26 20:19:52 [info]: ::1 - - [26/Oct/2026:14:49:52 +0000] "GET /api/health/metrics HTTP/1.1" 404 123 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:20:01 [info]: [Trace:8c2459b5..] HTTP GET /api/health/ -> 200 (1.70ms)
+2026-10-26 20:20:01 [info]: ::1 - - [26/Oct/2026:14:50:01 +0000] "GET /api/health/ HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:20:09 [info]: [Trace:55cab3ca..] HTTP GET /api/health/docs -> 404 (2.09ms)
+2026-10-26 20:20:09 [info]: ::1 - - [26/Oct/2026:14:50:09 +0000] "GET /api/health/docs HTTP/1.1" 404 120 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:20:16 [info]: [Trace:fd203207..] HTTP GET /api/health/ -> 200 (2.05ms)
+2026-10-26 20:20:16 [info]: ::1 - - [26/Oct/2026:14:50:16 +0000] "GET /api/health/ HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:26:10 [info]: [Trace:ec9d6705..] HTTP GET /api/health -> 200 (11.70ms)
+2026-10-26 20:26:10 [info]: ::1 - - [26/Oct/2026:14:56:10 +0000] "GET /api/health HTTP/1.1" 200 101 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:26:12 [info]: [Trace:5c179ec3..] HTTP GET /metrics -> 200 (7.45ms)
+2026-10-26 20:26:12 [info]: ::1 - - [26/Oct/2026:14:56:12 +0000] "GET /metrics HTTP/1.1" 200 656 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:26:14 [info]: 🤖 [AILogAnalytics] Initiating full system diagnostic scan...
+2026-10-26 20:26:14 [info]: [Trace:42e7b567..] HTTP GET /api/v1/ai/diagnostics -> 200 (60.99ms)
+2026-10-26 20:26:14 [info]: ::1 - - [26/Oct/2026:14:56:14 +0000] "GET /api/v1/ai/diagnostics HTTP/1.1" 200 366 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-26 20:26:25 [info]: [Trace:9f4b7631..] HTTP GET /api/queries/analytics/realtime -> 200 (14.07ms)
+2026-10-26 20:26:25 [info]: ::1 - - [26/Oct/2026:14:56:25 +0000] "GET /api/queries/analytics/realtime HTTP/1.1" 200 212 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+2026-10-28 14:13:53 [info]: 🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.
+2026-10-28 14:13:53 [info]: ⚡ [CacheService] Redis not explicitly enabled (set ENABLE_REDIS=true to connect). Operating with in-memory cache.
+2026-10-28 14:13:53 [info]: 🛡️ [RemediationAgent] Autonomous Remediation Agent initialized.
+2026-10-28 14:13:53 [info]: 📊 [Projector] RealTimeAnalyticsProjector subscribed to event bus.
+2026-10-28 14:13:53 [info]: 🛡️ [AnomalyEngine] Real-time Anomaly Detection Engine active.
