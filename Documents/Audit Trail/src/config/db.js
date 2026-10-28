@@ -6,17 +6,25 @@ import mongoose from 'mongoose';
  */
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/audit-trail-ledger';
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/audit-trail-ledger';
+    console.log(`⏳ Connecting to MongoDB at ${mongoURI}...`);
     
-    // Connect to MongoDB with enterprise connection pooling, cross-region replication concerns, and timeouts
-    await mongoose.connect(mongoURI, {
+    const mongooseOpts = {
       maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE) || 50,
-      minPoolSize: Number(process.env.MONGO_MIN_POOL_SIZE) || 10,
+      minPoolSize: Number(process.env.MONGO_MIN_POOL_SIZE) || 1,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      w: process.env.MONGO_WRITE_CONCERN || 'majority', // Guarantees zero data loss across cross-region replica sets
-      readPreference: process.env.MONGO_READ_PREFERENCE || 'primaryPreferred' // Low-latency read routing
-    });
+    };
+
+    if (process.env.MONGO_WRITE_CONCERN) {
+      mongooseOpts.w = process.env.MONGO_WRITE_CONCERN;
+    }
+    if (process.env.MONGO_READ_PREFERENCE) {
+      mongooseOpts.readPreference = process.env.MONGO_READ_PREFERENCE;
+    }
+
+    // Connect to MongoDB with enterprise connection pooling and timeouts
+    await mongoose.connect(mongoURI, mongooseOpts);
     
     console.log(`📦 MongoDB Connected: ${mongoose.connection.host}`);
   } catch (error) {
