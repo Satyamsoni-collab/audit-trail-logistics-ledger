@@ -1,6 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const openApiDoc = YAML.load(path.join(__dirname, '../docs/openapi.yaml'));
 
 // Import CQRS Routes
 import commandRoutes from './api/routes/command.routes.js';
@@ -157,6 +165,9 @@ app.get('/api/health', (req, res) => {
 
 // CQRS Routing Architecture
 // ----------------------------------------------------
+// Day 29: Swagger UI OpenAPI Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
+
 // Authentication & RBAC Routes (Day 27)
 app.use('/api/v1/auth', authRateLimiter, authRoutes);
 

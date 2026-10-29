@@ -28,8 +28,10 @@
     "morgan": "^1.12.1",
     "opossum": "^9.0.0",
     "rate-limit-redis": "^6.0.2",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.2",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
