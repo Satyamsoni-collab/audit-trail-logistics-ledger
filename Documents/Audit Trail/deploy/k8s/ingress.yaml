@@ -1,0 +1,50 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: audit-trail-ingress
+  namespace: audit-trail
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off" # Critical for Server-Sent Events (SSE)
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - ledger.audittrail.io
+      secretName: audit-trail-tls
+  rules:
+    - host: ledger.audittrail.io
+      http:
+        paths:
+          # Route API and OpenAPI documentation to Backend service
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: audit-trail-backend
+                port:
+                  number: 3000
+          - path: /api-docs
+            pathType: Prefix
+            backend:
+              service:
+                name: audit-trail-backend
+                port:
+                  number: 3000
+          - path: /metrics
+            pathType: Exact
+            backend:
+              service:
+                name: audit-trail-backend
+                port:
+                  number: 3000
+          # Route all UI routes to Frontend service
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: audit-trail-frontend
+                port:
+                  number: 80

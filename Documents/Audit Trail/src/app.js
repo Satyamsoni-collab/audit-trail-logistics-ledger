@@ -1,6 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const openApiDoc = YAML.load(path.join(__dirname, '../docs/openapi.yaml'));
 
 // Import CQRS Routes
 import commandRoutes from './api/routes/command.routes.js';
@@ -9,6 +17,8 @@ import auditRoutes from './api/routes/audit.routes.js';
 import complianceRoutes from './api/routes/compliance.routes.js';
 import aiRoutes from './api/routes/ai.routes.js';
 import streamRoutes from './api/routes/stream.routes.js';
+import authRoutes from './api/routes/auth.routes.js';
+import { commandRateLimiter, queryRateLimiter, authRateLimiter } from './api/middlewares/rateLimiter.middleware.js';
 import { errorHandler, notFoundHandler } from './api/middlewares/errorHandler.middleware.js';
 
 import mongoSanitize from 'express-mongo-sanitize';
@@ -49,25 +59,97 @@ app.use(morgan('combined', {
   }
 }));
 
-// Security Headers
-app.use(helmet());
+// --- Day 27: API Hardening & Security Middleware ---
 
-// Rate Limiting to prevent brute-force/DDoS attacks
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
+// 1. Production-Grade Helmet Security Headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: [
+        "'self'",
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'ws:',
+        'wss:'
+      ]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  frameguard: {
+    action: 'deny' // Clickjacking protection
+  },
+  noSniff: true,
+  xssFilter: true
+}));
 
-// CORS Middleware
-app.use(cors());
+// 2. Strict CORS Configuration for React Frontend
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  process.env.CLIENT_URL
+].filter(Boolean);
 
-// Body Parsing Middleware
-app.use(express.json({ limit: '10kb' })); // Limit body size to prevent payload DOS
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser requests (Postman, curl, internal microservices) or whitelisted frontend
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS Policy Violation: Origin '${origin}' is not authorized.`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-user-id',
+    'x-user-role',
+    'x-clearance-level',
+    'traceparent',
+    'Accept'
+  ]
+}));
 
-// Data Sanitization against NoSQL Query Injection
+// 3. Request Payload Size Limits (Buffer Overflow / DOS Prevention)
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// 4. Data Sanitization against NoSQL Query Injection & Prototype Pollution
 app.use(mongoSanitize());
+app.use((req, res, next) => {
+  // Prototype pollution filter
+  const isMalicious = (obj) => {
+    if (!obj || typeof obj !== 'object') return false;
+    for (const key of Object.keys(obj)) {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') return true;
+      if (typeof obj[key] === 'object' && isMalicious(obj[key])) return true;
+    }
+    return false;
+  };
+
+  if (isMalicious(req.body) || isMalicious(req.query)) {
+    logger.warn(`🚨 [Security] Blocked prototype pollution attempt from IP: ${req.ip}`);
+    return res.status(400).json({
+      status: 'error',
+      code: 'MALFORMED_PAYLOAD',
+      message: 'Suspicious payload detected: Reserved prototype keys are prohibited.'
+    });
+  }
+  next();
+});
 
 
 // --- Routes ---
@@ -83,14 +165,17 @@ app.get('/api/health', (req, res) => {
 
 // CQRS Routing Architecture
 // ----------------------------------------------------
-// All write operations (Commands) are routed here
-// Following append-only Event Sourcing, these endpoints will 
-// validate commands and append events to the Event Store.
-app.use('/api/commands', commandRoutes);
+// Day 29: Swagger UI OpenAPI Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
+
+// Authentication & RBAC Routes (Day 27)
+app.use('/api/v1/auth', authRateLimiter, authRoutes);
+
+// All write operations (Commands) are protected with rate limiting & RBAC
+app.use('/api/commands', commandRateLimiter, commandRoutes);
 
 // All read operations (Queries) are routed here
-// These endpoints will query the read models/projections.
-app.use('/api/queries', queryRoutes);
+app.use('/api/queries', queryRateLimiter, queryRoutes);
 app.use('/api/v1', auditRoutes);
 app.use('/api/v1/compliance', complianceRoutes);
 app.use('/api/v1/ai', aiRoutes);
