@@ -23,17 +23,17 @@ body,
 #root {
   min-height: 100%;
   margin: 0;
-  background: #000000 !important;
+  background: #f8fafc;
 }
 
 body {
-  color: var(--text);
-  font-family: 'Manrope', Arial, sans-serif;
+  color: #1e293b;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-button,
-input,
-select {
+.visualization-panel button,
+.visualization-panel input,
+.visualization-panel select {
   font: inherit;
   outline-color: var(--cyan);
 }
@@ -1028,91 +1028,7 @@ select {
   }
 }
 
-/* Shipment KPI cards */
-.shipment-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin: 24px 0;
-}
-
-.metric-card {
-  min-width: 0;
-  padding: 22px;
-  background: #050505;
-  border: 1px solid #242424;
-  border-radius: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-.metric-card:hover {
-  border-color: #55d6e8;
-  transform: translateY(-3px);
-}
-
-.metric-label {
-  color: #999999;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.4px;
-}
-
-.metric-value {
-  color: #f5f5f5;
-  font-size: 30px;
-  font-weight: 750;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-
-.metric-danger {
-  color: #fb7185;
-}
-
-.metric-warning {
-  color: #f5b84b;
-}
-
-.metric-normal {
-  color: #48d6a1;
-}
-
-.metric-description {
-  color: #888888;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.timeline-copy-action {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 12px 0;
-}
-
-.copy-event-button {
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #334155;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.copy-event-button:hover {
-  background: #f1f5f9;
-}
-
-.copy-event-message {
-  color: #475569;
-  font-size: 12px;
-}
+@media (max-width: 380px) {
   .shipment-metrics {
     grid-template-columns: 1fr;
   }
@@ -1131,4 +1047,3 @@ select {
     scroll-behavior: auto !important;
   }
 }
-
