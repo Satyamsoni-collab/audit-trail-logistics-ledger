@@ -1,6 +1,6 @@
-import crypto from 'crypto';
 import Event from '../models/events/EventStore.js';
 import EventBus from '../events/EventBus.js';
+import crypto from 'crypto';
 
 class EventStoreService {
   static computeEventHash({
@@ -11,81 +11,32 @@ class EventStoreService {
     payload,
     timestamp
   }) {
-    const raw = `${previousHash}|${aggregateId}|${version}|${eventType}|${JSON.stringify(payload)}|${new Date(timestamp).toISOString()}`;
-    return crypto.createHash('sha256').update(raw).digest('hex');
-  }
+    const canonicalData = JSON.stringify({
+      previousHash,
+      aggregateId,
+      version,
+      eventType,
+      payload,
+      timestamp: new Date(timestamp).toISOString()
+    });
 
-  static validateEventData({
-    aggregateId,
-    aggregateType,
-    eventType,
-    payload,
-    expectedVersion,
-    actor
-  }) {
-    if (typeof aggregateId !== 'string' || !aggregateId.trim()) {
-      throw new Error(
-        'ValidationError: aggregateId must be a non-empty string.'
-      );
-    }
-
-    if (
-      typeof aggregateType !== 'string' ||
-      !['InventoryItem', 'Shipment'].includes(aggregateType)
-    ) {
-      throw new Error('ValidationError: Invalid aggregateType.');
-    }
-
-    if (typeof eventType !== 'string' || !eventType.trim()) {
-      throw new Error(
-        'ValidationError: eventType must be a non-empty string.'
-      );
-    }
-
-    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-      throw new Error(
-        'ValidationError: payload must be a valid object.'
-      );
-    }
-
-    if (
-      !Number.isSafeInteger(expectedVersion) ||
-      expectedVersion < 0 ||
-      !Number.isSafeInteger(expectedVersion + 1)
-    ) {
-      throw new Error(
-        'ValidationError: expectedVersion must be a non-negative safe integer.'
-      );
-    }
-
-    if (typeof actor !== 'string' || !actor.trim()) {
-      throw new Error(
-        'ValidationError: actor must be a non-empty string.'
-      );
-    }
+    return crypto
+      .createHash('sha256')
+      .update(canonicalData)
+      .digest('hex');
   }
 
   static isVersionConflict(error) {
-    if (error?.code !== 11000) {
-      return false;
-    }
-
-    const keyPattern = error.keyPattern;
-
-    if (
-      keyPattern &&
-      Object.prototype.hasOwnProperty.call(keyPattern, 'aggregateId') &&
-      Object.prototype.hasOwnProperty.call(keyPattern, 'version') &&
-      Object.keys(keyPattern).length === 2
-    ) {
-      return true;
-    }
-
-    const message = error.message || '';
-
     return (
-      message.includes('aggregateId_1_version_1') ||
-      message.includes('aggregateId: 1, version: 1')
+      error?.code === 11000 &&
+      (
+        error?.keyPattern?.version === 1 ||
+        error?.keyPattern?.aggregateId === 1 ||
+        (
+          error?.keyPattern?.aggregateId === 1 &&
+          error?.keyPattern?.version === 1
+        )
+      )
     );
   }
 
@@ -95,16 +46,64 @@ class EventStoreService {
     eventType,
     payload,
     expectedVersion,
-    actor = 'system'
+    actor
   }) {
-    this.validateEventData({
-      aggregateId,
-      aggregateType,
-      eventType,
-      payload,
-      expectedVersion,
-      actor
+    if (
+      typeof aggregateId !== 'string' ||
+      !aggregateId.trim()
+    ) {
+      throw new Error(
+        'ValidationError: aggregateId must be a non-empty string.'
+      );
+    }
+
+    if (
+      typeof aggregateType !== 'string' ||
+      !aggregateType.trim()
+    ) {
+      throw new Error(
+        'ValidationError: aggregateType must be a non-empty string.'
+      );
+    }
+
+    if (
+      typeof eventType !== 'string' ||
+      !eventType.trim()
+    ) {
+      throw new Error(
+        'ValidationError: eventType must be a non-empty string.'
+      );
+    }
+
+    if (
+      !Number.isSafeInteger(expectedVersion) ||
+      expectedVersion < 0
+    ) {
+      throw new Error(
+        'ValidationError: expectedVersion must be a non-negative integer.'
+      );
+    }
+
+    if (
+      !payload ||
+      typeof payload !== 'object' ||
+      Array.isArray(payload)
+    ) {
+      throw new Error(
+        'ValidationError: payload must be an object.'
+      );
+    }
+
+    const currentVersion = await Event.countDocuments({
+      aggregateId
     });
+
+    if (currentVersion !== expectedVersion) {
+      throw new Error(
+        `ConcurrencyException: Aggregate ${aggregateId} ` +
+        `expected version ${expectedVersion}, current version is ${currentVersion}.`
+      );
+    }
 
     const newVersion = expectedVersion + 1;
 
@@ -114,6 +113,7 @@ class EventStoreService {
         .exec();
 
       const timestamp = new Date();
+
       const previousHash = prevEvent
         ? prevEvent.hash || 'GENESIS'
         : 'GENESIS';
@@ -142,16 +142,21 @@ class EventStoreService {
       const savedEvent = await event.save();
 
       console.log(
-        `[EventStore] Appended ${eventType} to ${aggregateType} ${aggregateId} [v${newVersion}] [hash: ${hash.substring(0, 10)}...]`
+        `[EventStore] Appended ${eventType} to ${aggregateType} ` +
+        `${aggregateId} [v${newVersion}] ` +
+        `[hash: ${hash.substring(0, 10)}...]`
       );
 
-      EventBus.publish(eventType, savedEvent);
+      // Wait for event publishing and allow failures to propagate.
+      await EventBus.publish(eventType, savedEvent);
 
       return savedEvent;
     } catch (error) {
       if (this.isVersionConflict(error)) {
         throw new Error(
-          `ConcurrencyException: Aggregate ${aggregateId} version ${newVersion} already exists. Reload the event stream and retry.`
+          `ConcurrencyException: Aggregate ${aggregateId} ` +
+          `version ${newVersion} already exists. ` +
+          'Reload the event stream and retry.'
         );
       }
 
@@ -160,7 +165,10 @@ class EventStoreService {
   }
 
   static async getEventStream(aggregateId) {
-    if (typeof aggregateId !== 'string' || !aggregateId.trim()) {
+    if (
+      typeof aggregateId !== 'string' ||
+      !aggregateId.trim()
+    ) {
       throw new Error(
         'ValidationError: aggregateId must be a non-empty string.'
       );
@@ -172,56 +180,57 @@ class EventStoreService {
   }
 
   static async verifyChainIntegrity(aggregateId) {
-    const events = await Event.find({ aggregateId })
-      .sort({ version: 1 })
-      .exec();
+    const events = await this.getEventStream(aggregateId);
 
-    if (!events || events.length === 0) {
-      return {
-        aggregateId,
-        isIntact: true,
-        totalEvents: 0,
-        message: 'No events found for aggregate.'
-      };
-    }
+    let previousHash = 'GENESIS';
+    let expectedVersion = 1;
 
-    let expectedPrevHash = 'GENESIS';
-    const violations = [];
+    for (const event of events) {
+      if (event.version !== expectedVersion) {
+        return {
+          valid: false,
+          aggregateId,
+          failedVersion: event.version,
+          reason: `Expected version ${expectedVersion}, received ${event.version}.`
+        };
+      }
 
-    for (const ev of events) {
-      if (ev.previousHash && ev.previousHash !== expectedPrevHash) {
-        violations.push({
-          version: ev.version,
-          reason: `Broken hash chain link: Expected previousHash ${expectedPrevHash}, found ${ev.previousHash}`
-        });
+      if (event.previousHash !== previousHash) {
+        return {
+          valid: false,
+          aggregateId,
+          failedVersion: event.version,
+          reason: 'Previous hash does not match the preceding event.'
+        };
       }
 
       const computedHash = this.computeEventHash({
-        previousHash: ev.previousHash || expectedPrevHash,
-        aggregateId: ev.aggregateId,
-        version: ev.version,
-        eventType: ev.eventType,
-        payload: ev.payload,
-        timestamp: ev.timestamp
+        previousHash: event.previousHash,
+        aggregateId: event.aggregateId,
+        version: event.version,
+        eventType: event.eventType,
+        payload: event.payload,
+        timestamp: event.timestamp
       });
 
-      if (ev.hash && ev.hash !== computedHash) {
-        violations.push({
-          version: ev.version,
-          reason: `Cryptographic hash mismatch (tampering detected): Expected ${computedHash}, found ${ev.hash}`
-        });
+      if (computedHash !== event.hash) {
+        return {
+          valid: false,
+          aggregateId,
+          failedVersion: event.version,
+          reason: 'Event hash does not match the computed hash.'
+        };
       }
 
-      expectedPrevHash = ev.hash || computedHash;
+      previousHash = event.hash;
+      expectedVersion++;
     }
 
     return {
+      valid: true,
       aggregateId,
-      isIntact: violations.length === 0,
-      totalEvents: events.length,
-      genesisHash: events[0].hash || 'N/A',
-      tipHash: expectedPrevHash,
-      violations
+      eventCount: events.length,
+      lastVersion: expectedVersion - 1
     };
   }
 }
