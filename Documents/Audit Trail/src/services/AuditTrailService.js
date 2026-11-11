@@ -80,19 +80,20 @@ class AuditTrailService {
           break;
 
         case 'STOCK_ADDED':
-          if (!Number.isFinite(quantityChange)) {
+          if (!Number.isSafeInteger(quantityChange) || quantityChange <= 0) {
             throw new Error('Invalid quantityChange in STOCK_ADDED event');
           }
+
           state.quantity += quantityChange;
           break;
 
         case 'STOCK_REMOVED':
-          if (!Number.isFinite(quantityChange)) {
+          if (!Number.isSafeInteger(quantityChange) || quantityChange >= 0) {
             throw new Error('Invalid quantityChange in STOCK_REMOVED event');
           }
 
-          // Assumes quantityChange is stored as a positive number.
-          state.quantity -= quantityChange;
+          // Negative quantityChange represents stock removal.
+          state.quantity += quantityChange;
           break;
 
         default:
