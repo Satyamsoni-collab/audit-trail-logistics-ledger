@@ -1,0 +1,187 @@
+asyncapi: '2.6.0'
+info:
+  title: Audit Trail Ledger - Event-Driven Message Broker Architecture
+  version: '1.0.0'
+  description: |
+    AsyncAPI specification for asynchronous event publishing and subscription over 
+    RabbitMQ and Apache Kafka message brokers across the CQRS ledger microservices.
+  contact:
+    name: Cloud-Native Architecture & Messaging SRE
+    email: messaging@audittrail.io
+
+servers:
+  rabbitmq-dev:
+    url: amqp://localhost:5672
+    protocol: amqp
+    description: Local Docker Compose RabbitMQ message broker.
+  kafka-prod:
+    url: kafka.cluster.local:9092
+    protocol: kafka
+    description: Production Kubernetes Confluent Kafka distributed event streaming cluster.
+
+defaultContentType: application/json
+
+channels:
+  inventory.events:
+    description: Central append-only event topic for immutable domain ledger transitions.
+    publish:
+      summary: Emit state transition events to broker
+      operationId: publishInventoryEvent
+      message:
+        oneOf:
+          - $ref: '#/components/messages/ShipmentCreated'
+          - $ref: '#/components/messages/StockUpdated'
+          - $ref: '#/components/messages/TransitUpdated'
+    subscribe:
+      summary: Read-model projectors and audit engines consume domain events
+      operationId: consumeInventoryEvent
+      message:
+        oneOf:
+          - $ref: '#/components/messages/ShipmentCreated'
+          - $ref: '#/components/messages/StockUpdated'
+
+  logistics.telemetry.alerts:
+    description: Stream of anomaly detection and automated remediation alerts from AI telemetry probes.
+    publish:
+      summary: Emit AI diagnostic anomaly warnings
+      operationId: publishAnomalyAlert
+      message:
+        $ref: '#/components/messages/AnomalyAlert'
+
+components:
+  messages:
+    ShipmentCreated:
+      name: ShipmentCreated
+      title: Shipment / Item Created Event
+      summary: Published immediately when a new aggregate is accepted by CreateItemHandler.
+      headers:
+        $ref: '#/components/schemas/EnterpriseEventHeaders'
+      payload:
+        type: object
+        required:
+          - aggregateId
+          - sku
+          - name
+        properties:
+          aggregateId:
+            type: string
+            format: uuid
+            example: 8e0c7691-e6cc-4c6e-8394-bfd27534b7c2
+          sku:
+            type: string
+            example: SKU-MED-9921
+          name:
+            type: string
+            example: Cold-Chain Blood Plasma Container
+          location:
+            type: string
+            example: Hub Terminal North
+          initialQuantity:
+            type: integer
+            example: 100
+          version:
+            type: integer
+            example: 1
+
+    StockUpdated:
+      name: StockUpdated
+      title: Stock Mutation Event (Added / Reserved)
+      summary: Published when stock levels mutate under optimistic concurrency control.
+      headers:
+        $ref: '#/components/schemas/EnterpriseEventHeaders'
+      payload:
+        type: object
+        required:
+          - aggregateId
+          - quantityChange
+          - version
+        properties:
+          aggregateId:
+            type: string
+            format: uuid
+          quantityChange:
+            type: integer
+            example: 25
+          reason:
+            type: string
+            example: Transfer to regional dispatch hub
+          version:
+            type: integer
+            example: 2
+          previousHash:
+            type: string
+            example: 7d1bc597aa23...
+          hash:
+            type: string
+            example: 0debe360d1b4...
+
+    TransitUpdated:
+      name: TransitUpdated
+      title: GPS Transit Checkpoint Event
+      summary: Emitted by IoT telemetry checkpoints during shipment movement.
+      headers:
+        $ref: '#/components/schemas/EnterpriseEventHeaders'
+      payload:
+        type: object
+        required:
+          - aggregateId
+          - location
+          - status
+        properties:
+          aggregateId:
+            type: string
+          location:
+            type: string
+            example: Highway Toll Gate Checkpoint Beta
+          status:
+            type: string
+            example: IN TRANSIT
+          timestamp:
+            type: string
+            format: date-time
+
+    AnomalyAlert:
+      name: AnomalyAlert
+      title: AI Anomaly Detection Warning
+      summary: Emitted when Autonomous Remediation Agent detects delays or data inconsistencies.
+      headers:
+        $ref: '#/components/schemas/EnterpriseEventHeaders'
+      payload:
+        type: object
+        properties:
+          alertId:
+            type: string
+            example: ALT-SEC-8812
+          severity:
+            type: string
+            enum: [LOW, MEDIUM, HIGH, CRITICAL]
+            example: HIGH
+          ruleCode:
+            type: string
+            example: SUSPICIOUS_SHIPMENT_DELAY
+          circuitBreakerState:
+            type: string
+            enum: [CLOSED, HALF_OPEN, OPEN]
+            example: CLOSED
+
+  schemas:
+    EnterpriseEventHeaders:
+      type: object
+      required:
+        - correlationId
+        - actorFingerprint
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+          example: 9a2f7c01-2e11-4899-b14d-114498ec5611
+        causationId:
+          type: string
+          format: uuid
+        traceparent:
+          type: string
+          example: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+        actorFingerprint:
+          type: string
+          example: 43eb58a1b806ad90...
+          description: SHA-256 zero-trust signature verifying user identity and clearance.

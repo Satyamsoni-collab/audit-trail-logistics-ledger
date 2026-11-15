@@ -1,5 +1,6 @@
 import EventBus from '../EventBus.js';
 import AnalyticsDashboardView from '../../models/readModels/AnalyticsDashboardView.js';
+import cacheService from '../../config/redis.js';
 import logger from '../../utils/logger.js';
 
 /**
@@ -33,6 +34,7 @@ class RealTimeAnalyticsProjector {
         },
         { upsert: true, new: true }
       );
+      await cacheService.del('cache:readmodel:analytics:realtime');
       logger.info(`[AnalyticsProjector] Metrics updated for new item: ${event.aggregateId}`);
     } catch (err) {
       logger.error(`[AnalyticsProjector Error] Failed to update metrics on ITEM_CREATED: ${err.message}`);
@@ -53,6 +55,7 @@ class RealTimeAnalyticsProjector {
         },
         { upsert: true, new: true }
       );
+      await cacheService.del('cache:readmodel:analytics:realtime');
       logger.info(`[AnalyticsProjector] Real-time metrics updated for stock movement: delta ${delta}`);
     } catch (err) {
       logger.error(`[AnalyticsProjector Error] Failed to update metrics on stock movement: ${err.message}`);

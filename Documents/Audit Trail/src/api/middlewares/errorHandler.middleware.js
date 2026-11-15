@@ -36,6 +36,16 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Handle standard HTTP error codes from body-parser (e.g. 413 Payload Too Large)
+  if (err.status || err.statusCode) {
+    const statusCode = err.status || err.statusCode;
+    return res.status(statusCode).json({
+      status: 'error',
+      code: err.type === 'entity.too.large' ? 'PAYLOAD_TOO_LARGE' : (err.code || 'HTTP_ERROR'),
+      message: message
+    });
+  }
+
   // Fallback for unhandled exceptions
   return res.status(500).json({
     status: 'error',

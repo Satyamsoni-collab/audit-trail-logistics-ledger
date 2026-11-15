@@ -1,7 +1,7 @@
 
 import Event from '../models/events/EventStore.js';
 import EventBus from '../events/EventBus.js';
-import crypto from 'crypto';
+
 
 class EventStoreService {
   static computeEventHash({
@@ -149,8 +149,6 @@ class EventStoreService {
         `${aggregateId} [v${newVersion}] ` +
         `[hash: ${hash.substring(0, 10)}...]`
       );
-
-      await EventBus.publish(eventType, savedEvent);
 
       return savedEvent;
     } catch (error) {

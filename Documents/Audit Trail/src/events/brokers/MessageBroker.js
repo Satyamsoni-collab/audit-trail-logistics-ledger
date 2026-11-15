@@ -22,6 +22,13 @@ class EnterpriseMessageBroker extends EventEmitter {
   }
 
   async initialize() {
+    // If RabbitMQ is not explicitly enabled or configured, use resilient in-memory broker
+    if (process.env.ENABLE_RABBITMQ !== 'true' && !process.env.RABBITMQ_URL) {
+      logger.info('🐰 [MessageBroker] RabbitMQ not explicitly enabled (set ENABLE_RABBITMQ=true to connect). Operating with in-memory broker.');
+      this.isConnected = false;
+      return;
+    }
+
     const rabbitMQUrl = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
 
     if (process.env.NODE_ENV === 'test' && !process.env.ENABLE_TEST_RABBITMQ) {
@@ -32,7 +39,11 @@ class EnterpriseMessageBroker extends EventEmitter {
 
     try {
       const amqp = await import('amqplib');
-      this.connection = await amqp.connect(rabbitMQUrl, { timeout: 4000 });
+      const connectPromise = amqp.connect(rabbitMQUrl);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timed out (2000ms)')), 2000)
+      );
+      this.connection = await Promise.race([connectPromise, timeoutPromise]);
       this.channel = await this.connection.createConfirmChannel();
 
       // 1. Declare Main Topic Exchange

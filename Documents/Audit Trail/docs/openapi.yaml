@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: Audit Trail - Event-Sourced Inventory & Logistics Ledger API
+  version: 1.0.0
+  description: |
+    Production-grade enterprise CQRS & Event-Sourcing Ledger for logistics tracking, 
+    inventory state machines, automated anomaly detection, and cryptographic audit proofs.
+  contact:
+    name: DevSecOps & Architecture Team
+    email: architecture@audittrail.io
+
+servers:
+  - url: http://localhost:3000
+    description: Local Development / Docker Compose Gateway
+  - url: https://api.audittrail.io
+    description: Enterprise Production Kubernetes Ingress
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter enterprise JWT Bearer token containing verified role claims.
+
+  schemas:
+    StandardError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        code:
+          type: string
+          example: UNAUTHORIZED_MISSING_TOKEN
+        message:
+          type: string
+          example: Access Denied: Missing or malformed Authorization bearer token.
+
+    InventoryItemCommand:
+      type: object
+      required:
+        - sku
+        - name
+      properties:
+        sku:
+          type: string
+          example: SKU-MED-9921
+        name:
+          type: string
+          example: Critical Temperature Vaccine Carrier
+        location:
+          type: string
+          example: Hub Central Cold-Storage
+        initialQuantity:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 50
+
+    StockMutationCommand:
+      type: object
+      required:
+        - quantityChange
+        - expectedVersion
+      properties:
+        quantityChange:
+          type: integer
+          example: 25
+          description: Positive integer to add stock, negative to reserve/decrement.
+        expectedVersion:
+          type: integer
+          example: 1
+          description: Optimistic concurrency lock version.
+        reason:
+          type: string
+          example: Batch replenishment dispatch
+
+    InventoryReadModel:
+      type: object
+      properties:
+        aggregateId:
+          type: string
+          format: uuid
+          example: 460a38f2-19ed-45de-94a6-44e69dca21bb
+        sku:
+          type: string
+          example: SKU-MED-9921
+        name:
+          type: string
+          example: Critical Temperature Vaccine Carrier
+        quantity:
+          type: integer
+          example: 75
+        location:
+          type: string
+          example: Hub Central Cold-Storage
+        status:
+          type: string
+          enum: [AVAILABLE, RESERVED, OUT_OF_STOCK, DISCONTINUED]
+          example: AVAILABLE
+        lastProcessedVersion:
+          type: integer
+          example: 2
+
+    RealtimeAnalytics:
+      type: object
+      properties:
+        metricKey:
+          type: string
+          example: global_telemetry_snapshot
+        totalDispatched:
+          type: integer
+          example: 1420
+        inTransitCount:
+          type: integer
+          example: 84
+        anomalyAlertsCount:
+          type: integer
+          example: 2
+
+paths:
+  /api/health:
+    get:
+      summary: Liveness and Readiness Health Check
+      description: Returns operational status of backend microservice and gateway.
+      responses:
+        '200':
+          description: Ledger microservice is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  message:
+                    type: string
+                    example: Audit Trail Ledger API is healthy.
+
+  /metrics:
+    get:
+      summary: Prometheus Metrics Scraper Endpoint
+      description: Returns OpenTelemetry and backend system metrics in Prometheus text format.
+      responses:
+        '200':
+          description: Plaintext Prometheus metrics.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP http_requests_total Total number of HTTP requests
+                  # TYPE http_requests_total counter
+                  http_requests_total{method="GET",status="200"} 412
+
+  /api/v1/auth/login:
+    post:
+      summary: Enterprise JWT Login & Token Issuance
+      description: Authenticates user credentials or demo role identity and returns signed HS256 JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: admin@audittrail.io
+                password:
+                  type: string
+                  example: Admin@Password123
+                role:
+                  type: string
+                  example: LOGISTICS_MANAGER
+      responses:
+        '200':
+          description: Successful authentication.
+        '401':
+          description: Invalid credentials.
+        '429':
+          description: Rate limit exceeded (Anti-Brute-Force).
+
+  /api/commands/inventory:
+    post:
+      summary: Create Inventory Item / Aggregate (CQRS Write Command)
+      description: Appends an ITEM_CREATED event to the immutable Event Store.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryItemCommand'
+      responses:
+        '202':
+          description: Command accepted and appended to Event Store.
+        '400':
+          description: Validation error or payload size > 10kb.
+        '401':
+          description: Missing or invalid JWT token.
+        '403':
+          description: Insufficient RBAC privileges (e.g. PUBLIC_VIEWER).
+        '429':
+          description: Write rate limit exceeded (>30 req/min).
+
+  /api/commands/inventory/{id}/stock:
+    post:
+      summary: Mutate Stock / State Transition (CQRS Write Command)
+      description: Appends a STOCK_ADDED or STOCK_REMOVED event with optimistic concurrency control.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Aggregate UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockMutationCommand'
+      responses:
+        '202':
+          description: State mutation command accepted.
+        '409':
+          description: ConcurrencyException (Stale expectedVersion conflict).
+        '403':
+          description: Forbidden role.
+
+  /api/queries/inventory/{id}:
+    get:
+      summary: Query Materialized Inventory Read Model (CQRS Read Query)
+      description: Fetches current projected state with Redis distributed cache acceleration.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Projected inventory read model.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    example: cache
+                  data:
+                    $ref: '#/components/schemas/InventoryReadModel'
+        '404':
+          description: Item not found.
+
+  /api/queries/analytics/realtime:
+    get:
+      summary: Real-Time Logistics Telemetry (Redis Cached)
+      description: Materialized analytics dashboard metrics cached in Redis for high-throughput reads.
+      responses:
+        '200':
+          description: Realtime logistics metrics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    example: redis_cache
+                  data:
+                    $ref: '#/components/schemas/RealtimeAnalytics'

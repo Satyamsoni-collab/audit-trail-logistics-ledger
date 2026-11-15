@@ -1,11 +1,10 @@
+import 'dotenv/config'; // Load environment variables first in ESM
 import http from 'http';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import app from './app.js';
 import connectDB from './config/db.js';
+import app from './app.js';
 
-// Load environment variables early
-dotenv.config();
+console.log('🚀 Starting Audit Trail Ledger...');
 
 const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
@@ -13,8 +12,11 @@ const server = http.createServer(app);
 // Connect to Database, then start server
 connectDB().then(() => {
   server.listen(PORT, () => {
+    console.log(`\n======================================================`);
     console.log(`🚀 Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
     console.log(`🩺 Health-check: http://localhost:${PORT}/api/health`);
+    console.log(`📊 Metrics:      http://localhost:${PORT}/metrics`);
+    console.log(`======================================================\n`);
   });
 }).catch(err => {
   console.error('❌ Failed to connect to database. Server not started.', err);
