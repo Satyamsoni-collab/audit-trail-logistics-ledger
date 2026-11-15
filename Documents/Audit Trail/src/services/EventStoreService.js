@@ -1,3 +1,4 @@
+
 import Event from '../models/events/EventStore.js';
 import EventBus from '../events/EventBus.js';
 import crypto from 'crypto';
@@ -31,11 +32,7 @@ class EventStoreService {
       error?.code === 11000 &&
       (
         error?.keyPattern?.version === 1 ||
-        error?.keyPattern?.aggregateId === 1 ||
-        (
-          error?.keyPattern?.aggregateId === 1 &&
-          error?.keyPattern?.version === 1
-        )
+        error?.keyPattern?.aggregateId === 1
       )
     );
   }
@@ -80,7 +77,13 @@ class EventStoreService {
       expectedVersion < 0
     ) {
       throw new Error(
-        'ValidationError: expectedVersion must be a non-negative integer.'
+        'ValidationError: expectedVersion must be a non-negative safe integer.'
+      );
+    }
+
+    if (expectedVersion >= Number.MAX_SAFE_INTEGER) {
+      throw new Error(
+        'ValidationError: Maximum safe event version reached.'
       );
     }
 
@@ -147,7 +150,6 @@ class EventStoreService {
         `[hash: ${hash.substring(0, 10)}...]`
       );
 
-      // Wait for event publishing and allow failures to propagate.
       await EventBus.publish(eventType, savedEvent);
 
       return savedEvent;

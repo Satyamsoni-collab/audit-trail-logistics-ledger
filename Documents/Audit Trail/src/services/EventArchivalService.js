@@ -1,3 +1,4 @@
+
 import crypto from 'crypto';
 import Event from '../models/events/EventStore.js';
 import EventArchive from '../models/events/EventArchive.js';
@@ -6,81 +7,126 @@ import logger from '../utils/logger.js';
 
 class EventArchivalService {
   /**
-   * Generates a cryptographic SHA-256 checksum for an event's immutable contents.
+   * Generates a cryptographic SHA-256 checksum.
    */
   static computeChecksum(event) {
-    const rawContent = `${event.aggregateId}:${event.version}:${event.eventType}:${JSON.stringify(event.payload)}:${event.timestamp.toISOString()}`;
+    const rawContent =
+      `${event.aggregateId}:${event.version}:${event.eventType}:` +
+      `${JSON.stringify(event.payload)}:${event.timestamp.toISOString()}`;
+
     return crypto.createHash('sha256').update(rawContent).digest('hex');
   }
 
   /**
-   * Archives historical events for aggregates that already have a verified snapshot.
-   * Only events prior to the latest snapshot version are eligible for cold storage migration.
-   * 
-   * @param {Object} options
-   * @param {Number} options.olderThanDays - Minimum age in days to qualify for archival
-   * @param {Boolean} options.dryRun - If true, only reports eligible events without deleting
+   * Copies eligible historical events to cold storage.
+   * Original Event Store records are never deleted.
+   * Existing archive entries are not inserted again.
    */
-  static async archiveHistoricalEvents({ olderThanDays = 30, dryRun = false } = {}) {
-    const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
-    const batchId = `ARCHIVE-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-    logger.info(`[EventArchivalService] Starting archival batch ${batchId} (Cutoff: ${cutoffDate.toISOString()}, dryRun: ${dryRun})`);
+  static async archiveHistoricalEvents({
+    olderThanDays = 30,
+    dryRun = false
+  } = {}) {
+    if (!Number.isFinite(olderThanDays) || olderThanDays < 0) {
+      throw new Error('olderThanDays must be a non-negative number.');
+    }
+
+    const cutoffDate = new Date(
+      Date.now() - olderThanDays * 24 * 60 * 60 * 1000
+    );
+
+    const batchId =
+      `ARCHIVE-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+
+    logger.info(
+      `[EventArchivalService] Starting batch ${batchId} ` +
+      `(Cutoff: ${cutoffDate.toISOString()}, dryRun: ${dryRun})`
+    );
 
     const snapshots = await Snapshot.find().exec();
+
     let totalEligible = 0;
     let totalArchived = 0;
 
     for (const snapshot of snapshots) {
-      // Safe boundary: only archive events whose version is STRICTLY LESS than the snapshot's version
-      // AND timestamp is older than cutoffDate.
       const query = {
         aggregateId: snapshot.aggregateId,
         version: { $lt: snapshot.version },
         timestamp: { $lte: cutoffDate }
       };
 
-      const eligibleEvents = await Event.find(query).sort({ version: 1 }).exec();
+      const eligibleEvents = await Event.find(query)
+        .sort({ version: 1 })
+        .exec();
+
       if (!eligibleEvents.length) continue;
 
       totalEligible += eligibleEvents.length;
 
       if (dryRun) {
-        logger.info(`[EventArchivalService (DRY-RUN)] Aggregate ${snapshot.aggregateId}: ${eligibleEvents.length} events eligible.`);
+        logger.info(
+          `[EventArchivalService] DRY-RUN: ` +
+          `${eligibleEvents.length} events eligible for ${snapshot.aggregateId}`
+        );
         continue;
       }
 
-      // Prepare batch documents with cryptographic checksums
-      const archiveDocs = eligibleEvents.map(ev => ({
-        originalEventId: ev._id,
-        aggregateId: ev.aggregateId,
-        aggregateType: ev.aggregateType,
-        eventType: ev.eventType,
-        payload: ev.payload,
-        version: ev.version,
-        actor: ev.actor,
-        originalTimestamp: ev.timestamp,
+      const archiveDocs = eligibleEvents.map(event => ({
+        originalEventId: event._id,
+        aggregateId: event.aggregateId,
+        aggregateType: event.aggregateType,
+        eventType: event.eventType,
+        payload: event.payload,
+        version: event.version,
+        actor: event.actor,
+        originalTimestamp: event.timestamp,
         archiveBatchId: batchId,
-        checksum: this.computeChecksum(ev)
+        checksum: this.computeChecksum(event)
       }));
 
-      // 1. Insert into cold storage
-      await EventArchive.insertMany(archiveDocs, { ordered: true });
+      // Upsert makes archiving repeat-safe using the unique aggregate/version key.
+      const archiveOperations = archiveDocs.map(doc => ({
+        updateOne: {
+          filter: {
+            aggregateId: doc.aggregateId,
+            version: doc.version
+          },
+          update: {
+            $setOnInsert: doc
+          },
+          upsert: true
+        }
+      }));
 
-      // 2. Safely purge from hot EventStore
-      const deleteResult = await Event.deleteMany({
-        _id: { $in: eligibleEvents.map(e => e._id) }
-      });
+      const result = await EventArchive.bulkWrite(
+        archiveOperations,
+        { ordered: false }
+      );
 
-      totalArchived += deleteResult.deletedCount;
-      logger.info(`[EventArchivalService] Archived & purged ${deleteResult.deletedCount} events for aggregate ${snapshot.aggregateId}`);
+      const newlyArchived = result.upsertedCount || 0;
+      totalArchived += newlyArchived;
+
+      logger.info(
+        `[EventArchivalService] Added ${newlyArchived} new archive copies ` +
+        `for aggregate ${snapshot.aggregateId}. Original events retained.`
+      );
     }
 
-    logger.info(`[EventArchivalService] Batch complete. Eligible: ${totalEligible}, Archived: ${totalArchived}`);
-    return { batchId, totalEligible, totalArchived, dryRun };
+    logger.info(
+      `[EventArchivalService] Batch complete. ` +
+      `Eligible: ${totalEligible}, New archive copies: ${totalArchived}`
+    );
+
+    return {
+      batchId,
+      totalEligible,
+      totalArchived,
+      dryRun
+    };
   }
 
   /**
-   * Retrieves events from both hot store and cold archive for full forensic audit history.
+   * Retrieves a complete audit trail without duplicate versions.
+   * Original Event Store records take priority over archive copies.
    */
   static async getFullAuditTrailWithArchive(aggregateId) {
     const [coldEvents, hotEvents] = await Promise.all([
@@ -88,12 +134,26 @@ class EventArchivalService {
       Event.find({ aggregateId }).sort({ version: 1 }).exec()
     ]);
 
+    const eventsByVersion = new Map();
+
+    for (const event of coldEvents) {
+      eventsByVersion.set(event.version, event);
+    }
+
+    for (const event of hotEvents) {
+      eventsByVersion.set(event.version, event);
+    }
+
+    const stream = [...eventsByVersion.values()].sort(
+      (a, b) => a.version - b.version
+    );
+
     return {
       aggregateId,
       coldEventCount: coldEvents.length,
       hotEventCount: hotEvents.length,
-      totalEvents: coldEvents.length + hotEvents.length,
-      stream: [...coldEvents, ...hotEvents]
+      totalEvents: stream.length,
+      stream
     };
   }
 }
